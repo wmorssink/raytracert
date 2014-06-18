@@ -159,8 +159,11 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 
 	//check colors
 	int reflectionLevel = 1;
-	//return shade(index, intersect, origin, reflectionLevel);
-	return Vec3Df(1, 1, 1);
+    // Return the color of the material at the triangle hit
+    // No shading etc. taken into account
+    int materialIndex = MyMesh.triangleMaterials[index];
+    return MyMesh.materials[materialIndex].Kd();
+    //return Vec3Df(1,1,1);
 }
 
 
