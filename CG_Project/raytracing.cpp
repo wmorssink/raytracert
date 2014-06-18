@@ -9,6 +9,10 @@
 #endif
 #include "raytracing.h"
 
+bool Ambient = false;
+bool Reflection = false;
+bool Shadows = false;
+bool Specular = false;
 
 //temporary variables
 Vec3Df testRayOrigin;
@@ -170,13 +174,62 @@ void yourDebugDraw()
 
 }
 
-void yourKeyboardFunc(char t, int x, int y)
-{
+void yourKeyboardFunc(char key, int x, int y){
+    
+    switch(key){
+        case '1':
+            Ambient=!Ambient;
+            break;
+            
+        case '2':
+            Reflection=!Reflection;
+            break;
+            
+        case '3':
+            Shadows=!Shadows;
+            break;
+            
+        case '4':
+            Specular=!Specular;
+            break;
+    }
+    
+    // Activate ambient lighting.
+    if(Ambient){
+        std::cout<<std::endl<<("DEBUG --- Ambient on")<<std::endl;
+    }
+    else{
+        std::cout<<std::endl<<("DEBUG --- Ambient off")<<std::endl;
+    }
+    
+    // Activate reflection.
+    if(Reflection){
+        std::cout<<std::endl<<("DEBUG --- Reflection on")<<std::endl;
+    }
+    else{
+        std::cout<<std::endl<<("DEBUG --- Reflection off")<<std::endl;
+    }
+    
+    // Activate shadow.
+    if(Shadows){
+        std::cout<<std::endl<<("DEBUG --- Shadows on")<<std::endl;
+    }
+    else{
+        std::cout<<std::endl<<("DEBUG --- Shadows off")<<std::endl;
+    }
+    
+    // Activate specularity.
+    if(Specular){
+        std::cout<<std::endl<<("DEBUG --- Speculartiy on")<<std::endl;
+    }
+    else{
+        std::cout<<std::endl<<("DEBUG --- Specularity off")<<std::endl;
+    }
 	// do what you want with the keyboard input t.
 	// x, y are the screen position
 
 	//here I use it to get the coordinates of a ray, which I then draw in the debug function.
 	produceRay(x, y, testRayOrigin, testRayDestination);
 
-	std::cout<<t<<" pressed! The mouse was in location "<<x<<","<<y<<"!"<<std::endl;
+	std::cout<<" pressed! The mouse was in location "<<x<<","<<y<<"!"<<std::endl;
 }

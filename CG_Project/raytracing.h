@@ -30,6 +30,6 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest);
 void yourDebugDraw();
 
 //want keyboard interaction? Here it is...
-void yourKeyboardFunc(char t, int x, int y);
+void yourKeyboardFunc(char key, int x, int y);
 
 #endif
