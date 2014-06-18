@@ -147,6 +147,29 @@ int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 	return index;
 }
 
+Vec3Df getDiffuseComponent(const int index, const Vec3Df intersection) {
+    // Return the color of the material at the triangle hit
+    // No shading etc. taken into account
+    int materialIndex = MyMesh.triangleMaterials[index];
+    Vec3Df Kd = MyMesh.materials[materialIndex].Kd();
+    Vec3Df normal = MyMesh.vertices[index].n;
+    
+    normal.normalize();
+    for(int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
+        // Calculate the normalized vector from the vertex to the light source
+        Vec3Df lightDirection = MyLightPositions[light_index] - intersection;
+        lightDirection.normalize();
+        // Calculate the dot product between the normal and the lightVector
+        float dot = Vec3Df::dotProduct(normal, lightDirection);
+        // Clamp the dotproduct
+        if (dot < 0) {
+            dot = 0;
+        }
+        return Kd * dot;
+    }
+    
+    return Kd;
+}
 
 //return the color of your pixel.
 Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
@@ -157,14 +180,11 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 	if (index == -1)//no intersection with triangle.
 		return Vec3Df(0, 0, 0);
 
-	//check colors
-	int reflectionLevel = 1;
-    // Return the color of the material at the triangle hit
-    // No shading etc. taken into account
-    int materialIndex = MyMesh.triangleMaterials[index];
-    return MyMesh.materials[materialIndex].Kd();
+    return getDiffuseComponent(index, intersectOut);
     //return Vec3Df(1,1,1);
 }
+
+
 
 
 void yourDebugDraw()
