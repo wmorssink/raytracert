@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <float.h>
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -26,7 +27,17 @@ void init()
 	//please realize that not all OBJ files will successfully load.
 	//Nonetheless, if they come from Blender, they should.
     //MyMesh.loadMesh("dodgeColorTest.obj", true);
-	MyMesh.loadMesh("cube.obj", true);
+    #ifdef __APPLE__
+        /*
+        * I wanted to set the path variable correctly or at least store it in some
+        * global variable / function, but I couldn't manage to get this done.
+        * This way, at least the Windows users have no problems...
+        */
+        MyMesh.loadMesh("/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/cube.obj", true);
+    #else
+        MyMesh.loadMesh("cube.obj", true);
+    #endif
+	
 	MyMesh.computeVertexNormals();
 
 	//one first move: initialize the first light source

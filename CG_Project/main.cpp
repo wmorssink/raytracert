@@ -401,8 +401,17 @@ void keyboard(unsigned char key, int x, int y)
 				result.setPixel(x,y, RGBValue(rgb[0], rgb[1], rgb[2]));
 			}
 		
-
-		result.writeImage("result.ppm");
+            #ifdef __APPLE__
+                /*
+                 * I wanted to set the path variable correctly or at least store it in some 
+                 * global variable / function, but I couldn't manage to get this done.
+                 * This way, at least the Windows users have no problems...
+                 */
+                result.writeImage("/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/result.ppm");
+            #else
+                result.writeImage("result.ppm");
+            #endif
+		
 		break;
 	}
 	case 27:     // touche ESC
