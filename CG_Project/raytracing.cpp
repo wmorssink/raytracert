@@ -21,7 +21,7 @@ void init()
 	//feel free to replace cube by a path to another model
 	//please realize that not all OBJ files will successfully load.
 	//Nonetheless, if they come from Blender, they should.
-    MyMesh.loadMesh("dodgeColorTest.obj", true);
+    MyMesh.loadMesh("/Users/Lars/git/TI1805RayTracer/CG_Project/dodgeColorTest.obj", true);
 	MyMesh.computeVertexNormals();
 
 	//one first move: initialize the first light source
