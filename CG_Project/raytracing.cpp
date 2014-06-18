@@ -21,7 +21,8 @@ void init()
 	//feel free to replace cube by a path to another model
 	//please realize that not all OBJ files will successfully load.
 	//Nonetheless, if they come from Blender, they should.
-    MyMesh.loadMesh("dodgeColorTest.obj", true);
+    //MyMesh.loadMesh("dodgeColorTest.obj", true);
+	MyMesh.loadMesh("cube.obj", true);
 	MyMesh.computeVertexNormals();
 
 	//one first move: initialize the first light source
@@ -30,10 +31,121 @@ void init()
 	MyLightPositions.push_back(MyCameraPosition);
 }
 
+
+/*
+returns true if a vector the NULL vector.
+else returns false
+*/
+bool isNullVector(Vec3Df v){
+	return v[0] == 0 && v[1] == 0 && v[2] == 0;
+}
+
+
+/*
+returns true if there is an intersect and outputs the intersection point as intersectOut.
+*/
+bool rayIntersectTriangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut){
+	const float SMALL_NUM = 0.00001f;
+	// R[0] = add(R[0], R[1]);
+	Vec3Df u, v, n, dir, w0, w;
+	float r, a, b;
+
+	// get triangle edge vectors and plane normal
+	u = T[1] - T[0];
+	v = T[2] - T[0];
+	n = Vec3Df::crossProduct(u, v); // cross product
+	if (isNullVector(n)) // triangle is degenerate
+		return NULL; // do not deal with this case
+	dir = R[1] - R[0]; // ray direction vector
+	w0 = R[0] - T[0];
+	b = Vec3Df::dotProduct(n, dir);
+	a = -Vec3Df::dotProduct(n, w0);
+	if (abs(b) < SMALL_NUM) { // ray is parallel to triangle plane
+		/*
+		* if (a == 0) // ray lies in triangle plane else // ray disjoint
+		* from plane
+		*/
+		return NULL;
+	}
+
+	// get intersect point of ray with triangle plane
+	r = a / b;
+	if (r < 0) { // ray goes away from triangle
+		return NULL; // => no intersect
+	}
+	// for a segment, also test if (r > 1.0) => no intersect
+
+	Vec3Df I = R[0] + r * dir; // intersect point of ray and
+	// plane
+	// is I inside T?
+	float uu, uv, vv, wu, wv, D;
+	uu = Vec3Df::dotProduct(u, u);
+	uv = Vec3Df::dotProduct(u, v);
+	vv = Vec3Df::dotProduct(v, v);
+	w  = I - T[0];
+	wu = Vec3Df::dotProduct(w, u);
+	wv = Vec3Df::dotProduct(w, v);
+	D  = uv * uv - uu * vv;
+
+	// get and test parametric coords
+	float s, t;
+	s = (uv * wv - vv * wu) / D;
+	if (s < 0 || s > 1) { // I is outside T
+		return NULL;
+	}
+	t = (uv * wu - uu * wv) / D;
+	if (t < 0 || (s + t) > 1) { // I is outside T
+		return NULL;
+	}
+	memcpy(intersectOut, &I, sizeof(Vec3Df));
+	return true; // I is in T
+}
+
+/*
+returns the index of the triangle of the intersection in the mesh structure.
+returns -1 if no intersect is found.
+Also writes the intersection point of the triangle to intersectOut.
+*/
+int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
+	Vec3Df intersect; //intersection point of closest triangle
+	int index = -1;	  //index of closest triangle
+	float dist = FLT_MAX;
+
+	Vec3Df R[] = { origin, dest };
+	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++){
+		Vec3Df tempIntersect;
+		Triangle triangle = MyMesh.triangles[i];
+		Vec3Df T[3] = { MyMesh.vertices[triangle.v[0]].p, MyMesh.vertices[triangle.v[1]].p, MyMesh.vertices[triangle.v[2]].p };
+
+
+		if (rayIntersectTriangle(R, T, &tempIntersect)){
+			//ray intersects with the current triangle
+			float tempDist = Vec3Df::distance(origin, tempIntersect);
+			if (tempDist < dist){
+				dist = tempDist;
+				index = i;
+				intersect = tempIntersect;
+			}
+		}
+	}
+	memcpy(intersectOut, &intersect, sizeof(Vec3Df));
+	return index;
+}
+
+
 //return the color of your pixel.
 Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 {
-	return Vec3Df(dest[0],dest[1],dest[2]);
+	Vec3Df intersectOut;
+	int index = intersectMesh(origin, dest, &intersectOut);
+
+	if (index == -1)//no intersection with triangle.
+		return Vec3Df(0, 0, 0);
+
+	//check colors
+	int reflectionLevel = 1;
+	//return shade(index, intersect, origin, reflectionLevel);
+	return Vec3Df(1, 1, 1);
 }
 
 
