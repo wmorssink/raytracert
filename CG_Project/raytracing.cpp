@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <float.h>
+#include <algorithm>
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -147,22 +148,14 @@ int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 	return index;
 }
 
-
-Vec3Df getDiffuseComponent(const int index, const Vec3Df intersection) {
+Vec3Df diffuseOnly(const Vec3Df& vertexPos, Vec3Df& normal, Material& material) {
     // Return the color of the material at the triangle hit
     // No shading etc. taken into account
-    int materialIndex = MyMesh.triangleMaterials[index];
-    Vec3Df Kd = MyMesh.materials[materialIndex].Kd();
-    
-    Triangle triangle = MyMesh.triangles[index];
-    Vec3Df edge01 = MyMesh.vertices[triangle.v[1]].p - MyMesh.vertices[triangle.v[0]].p;
-    Vec3Df edge02 = MyMesh.vertices[triangle.v[2]].p - MyMesh.vertices[triangle.v[0]].p;
-    Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
-    normal.normalize();
+    Vec3Df Kd = material.Kd();
     
     for(int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
         // Calculate the normalized vector from the vertex to the light source
-        Vec3Df lightDirection = MyLightPositions[light_index] - intersection;
+        Vec3Df lightDirection = MyLightPositions[light_index] - vertexPos;
         lightDirection.normalize();
         // Calculate the dot product between the normal and the lightVector
         float dot = Vec3Df::dotProduct(normal, lightDirection);
@@ -176,6 +169,45 @@ Vec3Df getDiffuseComponent(const int index, const Vec3Df intersection) {
     return Kd;
 }
 
+// Phong (!) Shading Specularity (http://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_shading_model)
+// Follow the course, only calculate Ks pow(dot(V,R),shininess), where V is the view vector and R is the Reflection vector of the light (like in pool billard computed from the LightPos, vertexPos and normal).
+// When computing specularities like this, verify that the light is on the right side of the surface, with respect to the normal
+// E.g., for a plane, the light source below the plane cannot cast light on the top, hence, there can also not be any specularity.
+Vec3Df phongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material& material)
+{
+	// Vector between vertex and camera
+	Vec3Df cameraVector = MyCameraPosition - vertexPos;
+	normal.normalize();
+	cameraVector.normalize();
+    
+    for(unsigned int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
+        Vec3Df lightPos = MyLightPositions[light_index];
+        // Vector between light and vertex
+        Vec3Df lightVector = lightPos - vertexPos;
+        // Normalize the vectors
+        lightVector.normalize();
+    
+        // Calculate the dot product
+        float dotProduct = Vec3Df::dotProduct(normal, lightVector);
+        // Clamp the dot product
+        if (dotProduct < 0) {
+            // Clamp to zero
+            return Vec3Df(0, 0, 0);
+        }
+        else {
+            // Reflection on mirror can be calculated through
+            // r = v - 2 * dot(n, v) * n
+            // where v is the viewpoint vector, r is the reflection vector and n is hte normal
+            // with all vectors normalized. (According to slide 74 Ray Tracing)
+            Vec3Df R = 2 * dotProduct * normal - lightVector;
+            return Vec3Df(1,1,1) * powf(Vec3Df::dotProduct(cameraVector, R), 1);
+            //return material.Ks() * powf(Vec3Df::dotProduct(cameraVector, R), material.Ns());
+        }
+	 }
+    
+    return Vec3Df(0,0,0);
+}
+
 //return the color of your pixel.
 Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 {
@@ -184,8 +216,24 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 
 	if (index == -1)//no intersection with triangle.
 		return Vec3Df(0, 0, 0);
+    
+    Triangle triangle = MyMesh.triangles[index];
+    Vec3Df edge01 = MyMesh.vertices[triangle.v[1]].p - MyMesh.vertices[triangle.v[0]].p;
+    Vec3Df edge02 = MyMesh.vertices[triangle.v[2]].p - MyMesh.vertices[triangle.v[0]].p;
+    Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
+    normal.normalize();
+    
+    int materialIndex = MyMesh.triangleMaterials[index];
+    Material material = MyMesh.materials[materialIndex];
 
-    return getDiffuseComponent(index, intersectOut);
+    Vec3Df diffusePart = diffuseOnly(intersectOut, normal, material);
+    Vec3Df specularPart = phongSpecularOnly(intersectOut, normal, material);
+    return diffusePart;
+    return Vec3Df(fmax(fmin(diffusePart[0] + specularPart[0], 1), 0),
+                  fmax(fmin(diffusePart[1] + specularPart[1], 1), 0),
+                  fmax(fmin(diffusePart[2] + specularPart[2], 1), 0));
+    // return diffuseOnly(diffusePart, normal, material) + phongSpecularOnly(intersectOut, normal, material);
+    //return getDiffuseComponent(index, intersectOut);
     //return Vec3Df(1,1,1);
 }
 

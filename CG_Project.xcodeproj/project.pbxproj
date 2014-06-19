@@ -48,6 +48,9 @@
 		492E7BA3194A4BFC0001CB08 /* traqueboule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = traqueboule.h; sourceTree = "<group>"; };
 		492E7BA4194A4BFC0001CB08 /* Vec3D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vec3D.h; sourceTree = "<group>"; };
 		492E7BA5194A4BFC0001CB08 /* Vertex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vertex.h; sourceTree = "<group>"; };
+		497E4A111952E56D00767C7D /* sphere.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = sphere.bmp; sourceTree = "<group>"; };
+		497E4A121952E56D00767C7D /* sphere.mtl */ = {isa = PBXFileReference; lastKnownFileType = text; path = sphere.mtl; sourceTree = "<group>"; };
+		497E4A131952E56D00767C7D /* sphere.obj */ = {isa = PBXFileReference; lastKnownFileType = text; path = sphere.obj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +87,9 @@
 		492E7B89194A4B7B0001CB08 /* CG_Project */ = {
 			isa = PBXGroup;
 			children = (
+				497E4A111952E56D00767C7D /* sphere.bmp */,
+				497E4A121952E56D00767C7D /* sphere.mtl */,
+				497E4A131952E56D00767C7D /* sphere.obj */,
 				492E7B97194A4BFC0001CB08 /* code.pro */,
 				492E7B98194A4BFC0001CB08 /* cube.mtl */,
 				492E7B99194A4BFC0001CB08 /* cube.obj */,
@@ -267,6 +273,7 @@
 				492E7B92194A4B7B0001CB08 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
