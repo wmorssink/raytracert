@@ -21,23 +21,27 @@ Vec3Df testRayOrigin;
 Vec3Df testRayDestination;
 
 //use this function for any preprocessing of the mesh.
-void init()
+void init(char* fileName)
 {
 	//load the mesh file
 	//feel free to replace cube by a path to another model
 	//please realize that not all OBJ files will successfully load.
 	//Nonetheless, if they come from Blender, they should.
-    //MyMesh.loadMesh("dodgeColorTest.obj", true);
-    #ifdef __APPLE__
-        /*
-        * I wanted to set the path variable correctly or at least store it in some
-        * global variable / function, but I couldn't manage to get this done.
-        * This way, at least the Windows users have no problems...
-        */
-        MyMesh.loadMesh("/Users/LC/git/ti1805raytracer/CG_Project/cube.obj", true);
-    #else
-        MyMesh.loadMesh("cube.obj", true);
-    #endif
+
+	if (fileName == NULL){
+		#ifdef __APPLE__
+			/*
+			* I wanted to set the path variable correctly or at least store it in some
+			* global variable / function, but I couldn't manage to get this done.
+			* This way, at least the Windows users have no problems...
+			*/
+			MyMesh.loadMesh("/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/cube.obj", true);
+		#else
+			//set default model
+			fileName = "cube.obj";//"dodgeColorTest.obj"
+		#endif
+	}
+	MyMesh.loadMesh(fileName, true);
 	
 	MyMesh.computeVertexNormals();
     calculateNormals();

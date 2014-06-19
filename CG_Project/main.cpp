@@ -277,7 +277,7 @@ int main(int argc, char** argv)
     glutIdleFunc( animate);
 
 
-	init();
+	init(argc >= 2 ? argv[1] : NULL);
 
 
     // lancement de la boucle principale

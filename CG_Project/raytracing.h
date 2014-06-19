@@ -15,7 +15,7 @@ extern unsigned int RayTracingResolutionY;  // largeur fenetre
 
 
 //use this function for any preprocessing of the mesh.
-void init();
+void init(char* fileName);
 
 //you can use this function to transform a click to an origin and destination
 //the last two values will be changed. There is no need to define this function.
