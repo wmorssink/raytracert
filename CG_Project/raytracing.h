@@ -12,10 +12,11 @@ extern unsigned int WindowSize_X;//window resolution width
 extern unsigned int WindowSize_Y;//window resolution height
 extern unsigned int RayTracingResolutionX;  // largeur fenetre
 extern unsigned int RayTracingResolutionY;  // largeur fenetre
-
+extern unsigned int pixelfactorX;
+extern unsigned int pixelfactorY;
 
 //use this function for any preprocessing of the mesh.
-void init();
+void init(char* fileName);
 
 //you can use this function to transform a click to an origin and destination
 //the last two values will be changed. There is no need to define this function.
@@ -32,7 +33,11 @@ void yourDebugDraw();
 //want keyboard interaction? Here it is...
 void yourKeyboardFunc(char key, int x, int y);
 
-void    calculateNormals();
+void calculateNormals();
+
+bool rayIntersectRectangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut);
+bool rayIntersectRectangle(Vec3Df R[], Vec3Df v0, Vec3Df v1, Vec3Df v2, Vec3Df* intersectOut);
+float rayIntersectBox(Vec3Df ray[], Vec3Df loc, float w, float l, float h, Vec3Df* returnIntersect);
 
 int getTeller();
 #endif

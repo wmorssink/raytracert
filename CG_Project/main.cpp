@@ -276,7 +276,7 @@ int main(int argc, char** argv)
     glutIdleFunc( animate);
 
 
-	init();
+	init(argc >= 2 ? argv[1] : NULL);
 
 
     // lancement de la boucle principale
@@ -382,33 +382,44 @@ void keyboard(unsigned char key, int x, int y)
 		produceRay(WindowSize_X-1,0, &origin10, &dest10);
 		produceRay(WindowSize_X-1,WindowSize_Y-1, &origin11, &dest11);
 
-		for (unsigned int y=0; y<WindowSize_Y;++y)
-			for (unsigned int x=0; x<WindowSize_X;++x)
-			{
-				//svp, decidez vous memes quels parametres vous allez passer à la fonction
-				//e.g., maillage, triangles, sphères etc.
-				float xscale=1.0f-float(x)/(WindowSize_X-1);
-				float yscale=1.0f-float(y)/(WindowSize_Y-1);
+		float divX = (WindowSize_X * pixelfactorX - 1);
+		float divY = (WindowSize_Y * pixelfactorY - 1);
+		int raysPerPixel = (pixelfactorX * pixelfactorY);
 
-				origin=yscale*(xscale*origin00+(1-xscale)*origin10)+
-					(1-yscale)*(xscale*origin01+(1-xscale)*origin11);
-				dest=yscale*(xscale*dest00+(1-xscale)*dest10)+
-					(1-yscale)*(xscale*dest01+(1-xscale)*dest11);
+		for (unsigned int y = 0; y < WindowSize_Y; ++y){
+			for (unsigned int x = 0; x < WindowSize_X; ++x){
+				Vec3Df rgb = Vec3Df(0, 0, 0);
 
-		
-				Vec3Df rgb = performRayTracing(origin, dest);
-				result.setPixel(x,y, RGBValue(rgb[0], rgb[1], rgb[2]));
+				for (int subx = 0; subx < pixelfactorX; subx++){
+					for (int suby = 0; suby < pixelfactorY; suby++){
+
+						float xscale = 1.0f - (float(x) * pixelfactorX + subx) / divX;
+						float yscale = 1.0f - (float(y) * pixelfactorY + suby) / divY;
+
+						origin = yscale*(xscale*origin00 + (1 - xscale)*origin10) +
+							(1 - yscale)*(xscale*origin01 + (1 - xscale)*origin11);
+						dest = yscale*(xscale*dest00 + (1 - xscale)*dest10) +
+							(1 - yscale)*(xscale*dest01 + (1 - xscale)*dest11);
+
+						rgb += performRayTracing(origin, dest);
+					}
+				}
+				rgb = rgb / raysPerPixel;
+
+				result.setPixel(x, y, RGBValue(rgb[0], rgb[1], rgb[2]));
 			}
-            #ifdef __APPLE__
-                /*
-                 * I wanted to set the path variable correctly or at least store it in some 
-                 * global variable / function, but I couldn't manage to get this done.
-                 * This way, at least the Windows users have no problems...
-                 */
-                result.writeImage("/Users/LC/git/ti1805raytracer/CG_project/result.ppm");
-            #else
-                result.writeImage("result.ppm");
-            #endif
+		}
+		
+		#ifdef __APPLE__
+		/*
+		 * I wanted to set the path variable correctly or at least store it in some 
+		 * global variable / function, but I couldn't manage to get this done.
+		 * This way, at least the Windows users have no problems...
+		 */
+			result.writeImage("/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/result.ppm");
+		#else
+			result.writeImage("result.ppm");
+		#endif
 		
 		break;
 	}
