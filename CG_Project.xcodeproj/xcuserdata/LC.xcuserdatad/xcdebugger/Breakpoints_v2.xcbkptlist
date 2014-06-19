@@ -15,7 +15,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "167"
             endingLineNumber = "167"
-            landmarkName = "diffuseOnly(const Vec3Df&amp; vertexPos, Vec3Df&amp; normal, Material&amp; material)"
+            landmarkName = "intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -268,6 +268,54 @@
             startingLineNumber = "401"
             endingLineNumber = "401"
             landmarkName = "keyboard(unsigned char key, int x, int y)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "CG_Project/raytracing.cpp"
+            timestampString = "424881212.492678"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "223"
+            endingLineNumber = "223"
+            landmarkName = "phongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material&amp; material)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "CG_Project/raytracing.cpp"
+            timestampString = "424881223.690889"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "227"
+            endingLineNumber = "227"
+            landmarkName = "phongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material&amp; material)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "CG_Project/raytracing.cpp"
+            timestampString = "424881261.431022"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "228"
+            endingLineNumber = "228"
+            landmarkName = "phongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material&amp; material)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
