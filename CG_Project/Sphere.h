@@ -9,6 +9,7 @@
 #ifndef CG_Project_Sphere_h
 #define CG_Project_Sphere_h
 #include "Vec3D.h"
+#include <math.h> 
 
 class Sphere {
     Vec3Df center;
@@ -36,7 +37,19 @@ class Sphere {
     }
     
     virtual float findIntersection(Vec3Df& origin, Vec3Df& destination) {
-        return -1;
+        Vec3Df ray = center - origin;
+        double eps = 1e-4;
+        double dot = Vec3Df::dotProduct(ray, destination);
+        double det = dot * dot - Vec3Df::dotProduct(center, center) + radius * radius;
+        
+        if ( det < 0 ) {
+            return 0;
+        }
+        else {
+            double t;
+            return (t=dot-det)>eps ? t : ((t=dot+det)>eps ? t : 0);
+
+        }
     }
     
 }
