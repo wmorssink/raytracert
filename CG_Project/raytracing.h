@@ -34,4 +34,5 @@ void yourKeyboardFunc(char key, int x, int y);
 
 void    calculateNormals();
 
+int getTeller();
 #endif

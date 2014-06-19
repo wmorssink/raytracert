@@ -1,4 +1,4 @@
-#ifdef WIN32
+    #ifdef WIN32
 #include <windows.h>
 #endif
 #ifdef __APPLE__
@@ -14,7 +14,6 @@
 #include "traqueboule.h"
 
 Vec3Df MyCameraPosition;
-
 std::vector<Vec3Df> MyLightPositions;
 
 //image class just dumped to hide...
@@ -400,14 +399,13 @@ void keyboard(unsigned char key, int x, int y)
 				Vec3Df rgb = performRayTracing(origin, dest);
 				result.setPixel(x,y, RGBValue(rgb[0], rgb[1], rgb[2]));
 			}
-		
             #ifdef __APPLE__
                 /*
                  * I wanted to set the path variable correctly or at least store it in some 
                  * global variable / function, but I couldn't manage to get this done.
                  * This way, at least the Windows users have no problems...
                  */
-                result.writeImage("/Users/jgmeligmeyling/git/ti1805raytracer/CG_project/result.ppm");
+                result.writeImage("/Users/LC/git/ti1805raytracer/CG_project/result.ppm");
             #else
                 result.writeImage("result.ppm");
             #endif

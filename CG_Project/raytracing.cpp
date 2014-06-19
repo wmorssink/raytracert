@@ -20,7 +20,7 @@ std::vector<Vec3Df> normals;
 //temporary variables
 Vec3Df testRayOrigin;
 Vec3Df testRayDestination;
-
+int teller=0;
 //use this function for any preprocessing of the mesh.
 void init()
 {
@@ -35,7 +35,7 @@ void init()
         * global variable / function, but I couldn't manage to get this done.
         * This way, at least the Windows users have no problems...
         */
-        MyMesh.loadMesh("/Users/jgmeligmeyling/git/ti1805raytracer/CG_project/cube.obj", true);
+        MyMesh.loadMesh("/Users/LC/git/ti1805raytracer/CG_project/cube.obj", true);
     #else
         MyMesh.loadMesh("cube.obj", true);
     #endif
@@ -47,7 +47,6 @@ void init()
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
 }
-
 
 void calculateNormals(){
     
@@ -213,8 +212,19 @@ Vec3Df phongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material& ma
             // where v is the viewpoint vector, r is the reflection vector and n is hte normal
             // with all vectors normalized. (According to slide 74 Ray Tracing)
             Vec3Df R = 2 * dotProduct * normal - lightVector;
-            return Vec3Df(1,1,1) * powf(Vec3Df::dotProduct(cameraVector, R), 1);
-            //return material.Ks() * powf(Vec3Df::dotProduct(cameraVector, R), material.Ns());
+            float dotProduct2=Vec3Df::dotProduct(cameraVector, R);
+            if(dotProduct2>0){
+                teller++;
+                std::cout<<teller<<std::endl;
+            }
+            if (dotProduct2 < 0) {
+                // Clamp to zero
+                return Vec3Df(0, 0, 0);
+            }
+            
+            
+            
+            //return material.Ks() * powf(dotProduct2, material.Ns());
         }
 	 }
     
@@ -234,11 +244,19 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
     int materialIndex = MyMesh.triangleMaterials[index];
     Material material = MyMesh.materials[materialIndex];
 
+    
+    Vec3Df res(0,0,0);
     Vec3Df diffusePart = diffuseOnly(intersectOut, normal, material);
     Vec3Df specularPart = phongSpecularOnly(intersectOut, normal, material);
+    if(Ambient){
+        res+=diffusePart;
+    }
+    if(Specular){
+        res+=specularPart;
+    }
     
-    // Just diffuse
-    return diffusePart;
+    
+    return res;
     
     // Diffuse and specular, clipped between 0 and 1
     // return Vec3Df(fmax(fmin(diffusePart[0] + specularPart[0], 1), 0),
@@ -250,6 +268,12 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
     
     // Everything white (to test intersect)
     //return Vec3Df(1,1,1);
+}
+
+
+
+int getTeller(){
+    return teller;
 }
 
 
@@ -284,7 +308,7 @@ void yourKeyboardFunc(char key, int x, int y){
             break;
             
         case '2':
-            Reflection=!Reflection;
+             Specular=!Specular;
             break;
             
         case '3':
@@ -292,7 +316,7 @@ void yourKeyboardFunc(char key, int x, int y){
             break;
             
         case '4':
-            Specular=!Specular;
+            Reflection=!Reflection;
             break;
     }
     
