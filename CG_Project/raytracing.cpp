@@ -152,9 +152,9 @@ Vec3Df getDiffuseComponent(const int index, const Vec3Df intersection) {
     // No shading etc. taken into account
     int materialIndex = MyMesh.triangleMaterials[index];
     Vec3Df Kd = MyMesh.materials[materialIndex].Kd();
-    Vec3Df normal = MyMesh.vertices[index].n;
-    
+    Vec3Df normal = MyMesh.vertices[MyMesh.triangles[index].v[0]].n;
     normal.normalize();
+    
     for(int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
         // Calculate the normalized vector from the vertex to the light source
         Vec3Df lightDirection = MyLightPositions[light_index] - intersection;
