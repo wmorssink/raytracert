@@ -12,7 +12,8 @@ extern unsigned int WindowSize_X;//window resolution width
 extern unsigned int WindowSize_Y;//window resolution height
 extern unsigned int RayTracingResolutionX;  // largeur fenetre
 extern unsigned int RayTracingResolutionY;  // largeur fenetre
-
+extern unsigned int pixelfactorX;
+extern unsigned int pixelfactorY;
 
 //use this function for any preprocessing of the mesh.
 void init(char* fileName);

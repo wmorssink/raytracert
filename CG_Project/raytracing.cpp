@@ -15,6 +15,10 @@ bool Reflection = false;
 bool Shadows = false;
 bool Specular = false;
 
+#define pixelfactor 3
+unsigned int pixelfactorX = pixelfactor;
+unsigned int pixelfactorY = pixelfactor;
+
 std::vector<Vec3Df> normals;
 //temporary variables
 Vec3Df testRayOrigin;
@@ -244,6 +248,20 @@ void yourKeyboardFunc(char key, int x, int y){
         case '4':
             Specular=!Specular;
             break;
+		case '+':
+			pixelfactorX++;
+			pixelfactorY++;
+			printf("pixelfactorX = %i\npixelfactorY = %i\n", pixelfactorX, pixelfactorY);
+			break;
+		case '-':
+			pixelfactorX--;
+			pixelfactorY--;
+			if (pixelfactorX < 1)
+				pixelfactorX = 1;
+			if (pixelfactorY < 1)
+				pixelfactorY = 1;
+			printf("pixelfactorX = %i\npixelfactorY = %i\n", pixelfactorX, pixelfactorY);
+			break;
     }
     
     // Activate ambient lighting.
