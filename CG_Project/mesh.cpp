@@ -28,13 +28,14 @@ void Mesh::computeVertexNormals () {
     //initialisation des normales des vertex
     for (unsigned int i = 0; i < vertices.size (); i++)
         vertices[i].n = Vec3Df (0.0, 0.0, 0.0);
-
+    
     //Sum up neighboring normals
     for (unsigned int i = 0; i < triangles.size (); i++) {
         Vec3Df edge01 = vertices[triangles[i].v[1]].p -  vertices[triangles[i].v[0]].p;
         Vec3Df edge02 = vertices[triangles[i].v[2]].p -  vertices[triangles[i].v[0]].p;
         Vec3Df n = Vec3Df::crossProduct (edge01, edge02);
         n.normalize ();
+        
         for (unsigned int j = 0; j < 3; j++)
             vertices[triangles[i].v[j]].n += n;
     }

@@ -147,12 +147,17 @@ int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 	return index;
 }
 
+
 Vec3Df getDiffuseComponent(const int index, const Vec3Df intersection) {
     // Return the color of the material at the triangle hit
     // No shading etc. taken into account
     int materialIndex = MyMesh.triangleMaterials[index];
     Vec3Df Kd = MyMesh.materials[materialIndex].Kd();
-    Vec3Df normal = MyMesh.vertices[MyMesh.triangles[index].v[0]].n;
+    
+    Triangle triangle = MyMesh.triangles[index];
+    Vec3Df edge01 = MyMesh.vertices[triangle.v[1]].p - MyMesh.vertices[triangle.v[0]].p;
+    Vec3Df edge02 = MyMesh.vertices[triangle.v[2]].p - MyMesh.vertices[triangle.v[0]].p;
+    Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
     normal.normalize();
     
     for(int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
