@@ -15,6 +15,7 @@ bool Reflection = false;
 bool Shadows = false;
 bool Specular = false;
 
+std::vector<Vec3Df> normals;
 //temporary variables
 Vec3Df testRayOrigin;
 Vec3Df testRayDestination;
@@ -33,17 +34,29 @@ void init()
         * global variable / function, but I couldn't manage to get this done.
         * This way, at least the Windows users have no problems...
         */
-        MyMesh.loadMesh("/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/cube.obj", true);
+        MyMesh.loadMesh("/Users/LC/git/ti1805raytracer/CG_Project/cube.obj", true);
     #else
         MyMesh.loadMesh("cube.obj", true);
     #endif
 	
 	MyMesh.computeVertexNormals();
-
+    calculateNormals();
 	//one first move: initialize the first light source
 	//at least ONE light source has to be in the scene!!!
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
+}
+
+
+void calculateNormals(){
+    
+    
+    for (int i=0; i<MyMesh.triangles.size();i++){
+    Vec3Df edge01 = MyMesh.vertices[MyMesh.triangles[i].v[1]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
+    Vec3Df edge02 = MyMesh.vertices[MyMesh.triangles[i].v[2]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
+    Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
+    normals.push_back(normal);
+    }
 }
 
 
@@ -154,11 +167,7 @@ Vec3Df getDiffuseComponent(const int index, const Vec3Df intersection) {
     int materialIndex = MyMesh.triangleMaterials[index];
     Vec3Df Kd = MyMesh.materials[materialIndex].Kd();
     
-    Triangle triangle = MyMesh.triangles[index];
-    Vec3Df edge01 = MyMesh.vertices[triangle.v[1]].p - MyMesh.vertices[triangle.v[0]].p;
-    Vec3Df edge02 = MyMesh.vertices[triangle.v[2]].p - MyMesh.vertices[triangle.v[0]].p;
-    Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
-    normal.normalize();
+    Vec3Df normal=normals[index];
     
     for(int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
         // Calculate the normalized vector from the vertex to the light source
