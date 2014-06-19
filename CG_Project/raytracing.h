@@ -32,6 +32,10 @@ void yourDebugDraw();
 //want keyboard interaction? Here it is...
 void yourKeyboardFunc(char key, int x, int y);
 
-void    calculateNormals();
+void calculateNormals();
+
+bool rayIntersectRectangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut);
+bool rayIntersectRectangle(Vec3Df R[], Vec3Df v0, Vec3Df v1, Vec3Df v2, Vec3Df* intersectOut);
+float rayIntersectBox(Vec3Df ray[], Vec3Df loc, float w, float l, float h, Vec3Df* returnIntersect);
 
 #endif

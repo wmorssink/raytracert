@@ -285,3 +285,156 @@ void yourKeyboardFunc(char key, int x, int y){
 
 	std::cout<<" pressed! The mouse was in location "<<x<<","<<y<<"!"<<std::endl;
 }
+
+
+
+/*
+returns true if there is an intersect and outputs the intersection point as intersectOut.
+*/
+bool rayIntersectRectangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut){
+	const float SMALL_NUM = 0.00001f;
+	// R[0] = add(R[0], R[1]);
+	Vec3Df u, v, n, dir, w0, w;
+	float r, a, b;
+
+	// get triangle edge vectors and plane normal
+	u = T[1] - T[0];
+	v = T[2] - T[0];
+	n = Vec3Df::crossProduct(u, v); // cross product
+	if (isNullVector(n)) // triangle is degenerate
+		return false; // do not deal with this case
+	dir = R[1] - R[0]; // ray direction vector
+	w0 = R[0] - T[0];
+	b = Vec3Df::dotProduct(n, dir);
+	a = -Vec3Df::dotProduct(n, w0);
+	if (abs(b) < SMALL_NUM) { // ray is parallel to triangle plane
+		/*
+		* if (a == 0) // ray lies in triangle plane else // ray disjoint
+		* from plane
+		*/
+		return false;
+	}
+
+	// get intersect point of ray with triangle plane
+	r = a / b;
+	if (r < 0) { // ray goes away from triangle
+		return false; // => no intersect
+	}
+	// for a segment, also test if (r > 1.0) => no intersect
+
+	Vec3Df I = R[0] + r * dir; // intersect point of ray and
+	// plane
+	// is I inside T?
+	float uu, uv, vv, wu, wv, D;
+	uu = Vec3Df::dotProduct(u, u);
+	uv = Vec3Df::dotProduct(u, v);
+	vv = Vec3Df::dotProduct(v, v);
+	w = I - T[0];
+	wu = Vec3Df::dotProduct(w, u);
+	wv = Vec3Df::dotProduct(w, v);
+	D = uv * uv - uu * vv;
+
+	// get and test parametric coords
+	float s, t;
+	s = (uv * wv - vv * wu) / D;
+	if (s < 0 || s > 1) { // I is outside T
+		return false;
+	}
+	t = (uv * wu - uu * wv) / D;
+	if (t < 0 || t > 1) { // I is outside T
+		return false;
+	}
+	memcpy(intersectOut, &I, sizeof(Vec3Df));
+	return true; // I is in T
+}
+
+bool rayIntersectRectangle(Vec3Df R[], Vec3Df v0, Vec3Df v1, Vec3Df v2, Vec3Df* intersectOut){
+	Vec3Df T[] = { v0, v1, v2 };
+	return rayIntersectRectangle(R, T, intersectOut);
+}
+
+/**
+* boxIntersect
+*
+* @param ray
+* 			Vector3f {origin, destination}
+* @param loc
+*            Location of the box (corner with the smallest coordinates)
+* @param w
+*            Width of the box (>0) (x-coord)
+* @param l
+*            Length of the box (>0) (z-coord)
+* @param h
+*            Height of the box (>0) (y-coord)
+* @param returnIntersect
+* 			closest Intersection point with the box
+* @return Closest intersection with the box from the ray start
+*/
+float rayIntersectBox(Vec3Df ray[], Vec3Df loc, float w, float l, float h, Vec3Df* returnIntersect) {
+	Vec3Df c = loc;
+	// Calculate points of box
+	c[0] += w;
+	c[1] += h;
+	c[2] += l;
+	Vec3Df rec[] = { loc, loc, loc, loc, c, c, c, c };
+	rec[1][0] += w;
+	rec[2][1] += h;
+	rec[3][2] += l;
+	rec[5][0] -= w;
+	rec[6][1] -= h;
+	rec[7][2] -= l;
+
+	// Calculate closest rectangle intersection
+	float returnDistance = FLT_MAX;
+	Vec3Df inmem;
+	Vec3Df* in = &inmem;
+	if (rayIntersectRectangle(ray, rec[0], rec[1], rec[2], returnIntersect)) {
+		returnDistance = Vec3Df::distance(ray[0], *returnIntersect);
+	}
+	if (rayIntersectRectangle(ray, rec[0], rec[1], rec[3], in)) {
+		float distance = Vec3Df::distance(ray[0], *in);
+		if (distance < returnDistance) {
+			returnDistance = distance;
+			returnIntersect = in;
+		}
+	}
+	if (rayIntersectRectangle(ray, rec[0], rec[2], rec[3], in)) {
+		float distance = Vec3Df::distance(ray[0], *in);
+		if (distance < returnDistance) {
+			returnDistance = distance;
+			returnIntersect = in;
+		}
+	}
+	if (rayIntersectRectangle(ray, rec[4], rec[5], rec[6], in)) {
+		float distance = Vec3Df::distance(ray[0], *in);
+		if (distance < returnDistance) {
+			returnDistance = distance;
+			returnIntersect = in;
+		}
+	}
+	if (rayIntersectRectangle(ray, rec[4], rec[5], rec[7], in)) {
+		float distance = Vec3Df::distance(ray[0], *in);
+		if (distance < returnDistance) {
+			returnDistance = distance;
+			returnIntersect = in;
+		}
+	}
+	if (rayIntersectRectangle(ray, rec[5], rec[6], rec[7], in)) {
+		float distance = Vec3Df::distance(ray[0], *in);
+		if (distance < returnDistance) {
+			returnDistance = distance;
+			returnIntersect = in;
+		}
+	}
+
+	return (returnDistance);
+}
+
+Vec3Df boxIntersectTest(Vec3Df ray[], float x, float y, float z, float w, float h, float l){
+	Vec3Df b = Vec3Df(0, 0, 0);
+	rayIntersectBox(ray, Vec3Df(x, y, z), w, h, l, &b);
+	if (!isNullVector(b)){
+		return Vec3Df(1, 0, 0);
+	}
+	return Vec3Df(0, 1, 0);
+}
