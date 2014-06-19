@@ -16,6 +16,7 @@ bool Reflection = false;
 bool Shadows = false;
 bool Specular = false;
 
+std::vector<Vec3Df> normals;
 //temporary variables
 Vec3Df testRayOrigin;
 Vec3Df testRayDestination;
@@ -34,17 +35,29 @@ void init()
         * global variable / function, but I couldn't manage to get this done.
         * This way, at least the Windows users have no problems...
         */
-        MyMesh.loadMesh("/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/cube.obj", true);
+        MyMesh.loadMesh("/Users/jgmeligmeyling/git/ti1805raytracer/CG_project/cube.obj", true);
     #else
         MyMesh.loadMesh("cube.obj", true);
     #endif
 	
 	MyMesh.computeVertexNormals();
-
+    calculateNormals();
 	//one first move: initialize the first light source
 	//at least ONE light source has to be in the scene!!!
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
+}
+
+
+void calculateNormals(){
+    
+    
+    for (int i=0; i<MyMesh.triangles.size();i++){
+    Vec3Df edge01 = MyMesh.vertices[MyMesh.triangles[i].v[1]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
+    Vec3Df edge02 = MyMesh.vertices[MyMesh.triangles[i].v[2]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
+    Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
+    normals.push_back(normal);
+    }
 }
 
 
@@ -217,23 +230,25 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 	if (index == -1)//no intersection with triangle.
 		return Vec3Df(0, 0, 0);
     
-    Triangle triangle = MyMesh.triangles[index];
-    Vec3Df edge01 = MyMesh.vertices[triangle.v[1]].p - MyMesh.vertices[triangle.v[0]].p;
-    Vec3Df edge02 = MyMesh.vertices[triangle.v[2]].p - MyMesh.vertices[triangle.v[0]].p;
-    Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
-    normal.normalize();
-    
+    Vec3Df normal = normals[index];
     int materialIndex = MyMesh.triangleMaterials[index];
     Material material = MyMesh.materials[materialIndex];
 
     Vec3Df diffusePart = diffuseOnly(intersectOut, normal, material);
     Vec3Df specularPart = phongSpecularOnly(intersectOut, normal, material);
+    
+    // Just diffuse
     return diffusePart;
-    return Vec3Df(fmax(fmin(diffusePart[0] + specularPart[0], 1), 0),
-                  fmax(fmin(diffusePart[1] + specularPart[1], 1), 0),
-                  fmax(fmin(diffusePart[2] + specularPart[2], 1), 0));
+    
+    // Diffuse and specular, clipped between 0 and 1
+    // return Vec3Df(fmax(fmin(diffusePart[0] + specularPart[0], 1), 0),
+    //            fmax(fmin(diffusePart[1] + specularPart[1], 1), 0),
+    //            fmax(fmin(diffusePart[2] + specularPart[2], 1), 0));
+    
+    // Diffuse + specular
     // return diffuseOnly(diffusePart, normal, material) + phongSpecularOnly(intersectOut, normal, material);
-    //return getDiffuseComponent(index, intersectOut);
+    
+    // Everything white (to test intersect)
     //return Vec3Df(1,1,1);
 }
 

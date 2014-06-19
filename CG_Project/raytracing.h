@@ -32,4 +32,6 @@ void yourDebugDraw();
 //want keyboard interaction? Here it is...
 void yourKeyboardFunc(char key, int x, int y);
 
+void    calculateNormals();
+
 #endif
