@@ -18,15 +18,21 @@ bool Reflection = true;
 bool Shadows = true;
 bool Specular = true;
 
-#define pixelfactor 1
+#define pixelfactor 1	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
-std::vector<Vec3Df> normals;
+#define BLACK Vec3Df(0, 0, 0);
+
+using namespace std;
+
+vector<Vec3Df> normals;
+
 //temporary variables
 Vec3Df testRayOrigin;
 Vec3Df testRayDestination;
 int teller=0;
+
 //use this function for any preprocessing of the mesh.
 void init(char* fileName)
 {
@@ -59,16 +65,13 @@ void init(char* fileName)
 }
 
 void calculateNormals(){
-    
-    
     for (int i=0; i<MyMesh.triangles.size();i++){
-    Vec3Df edge01 = MyMesh.vertices[MyMesh.triangles[i].v[1]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
-    Vec3Df edge02 = MyMesh.vertices[MyMesh.triangles[i].v[2]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
-    Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
-    normals.push_back(normal);
+		Vec3Df edge01 = MyMesh.vertices[MyMesh.triangles[i].v[1]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
+		Vec3Df edge02 = MyMesh.vertices[MyMesh.triangles[i].v[2]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
+		Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
+		normals.push_back(normal);
     }
 }
-
 
 /*
 returns true if a vector the NULL vector.
@@ -77,7 +80,6 @@ else returns false
 bool isNullVector(Vec3Df v){
 	return v[0] == 0 && v[1] == 0 && v[2] == 0;
 }
-
 
 /*
 returns true if there is an intersect and outputs the intersection point as intersectOut.
@@ -170,146 +172,88 @@ int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 	return index;
 }
 
-Vec3Df diffuseOnly(const Vec3Df& vertexPos, Vec3Df& normal, Material& material) {
-    // Return the color of the material at the triangle hit
-    // No shading etc. taken into account
-    Vec3Df Kd = material.Kd();
-    
-    for(int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
-        // Calculate the normalized vector from the vertex to the light source
-        Vec3Df lightDirection = MyLightPositions[light_index] - vertexPos;
-        lightDirection.normalize();
-        // Calculate the dot product between the normal and the lightVector
-        float dot = Vec3Df::dotProduct(normal, lightDirection);
-        // Clamp the dotproduct
-        if (dot < 0) {
-            dot = 0;
-        }
-        return Kd * dot;
-    }
-    
-    return Kd;
-}
 
-Vec3Df phongSpecularOnly(Material m, const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & lightPos, const Vec3Df & cameraPos)
-{
-	Vec3Df lightDir = (lightPos - vertexPos);
-	lightDir.normalize();
-	Vec3Df viewDir = (cameraPos - vertexPos);
-	Vec3Df r = (2 * Vec3Df::dotProduct(lightDir, normal) * normal - lightDir);
-	r = m.Ks() * pow(max(Vec3Df::dotProduct(viewDir, r), 0), m.Ns());
-	return r;
-}
-
-Vec3Df phongSpecularOnly(Material m, const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & cameraPos)
-{
-	Vec3Df rbg;
-	for (unsigned int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
-		rbg += phongSpecularOnly(m, vertexPos, normal, MyLightPositions[light_index], MyCameraPosition);
-	}
-	return rbg;
-}
-
-
-// Phong (!) Shading Specularity (http://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_shading_model)
-// Follow the course, only calculate Ks pow(dot(V,R),shininess), where V is the view vector and R is the Reflection vector of the light (like in pool billard computed from the LightPos, vertexPos and normal).
-// When computing specularities like this, verify that the light is on the right side of the surface, with respect to the normal
-// E.g., for a plane, the light source below the plane cannot cast light on the top, hence, there can also not be any specularity.
-Vec3Df phongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material& material)
-{
-	// Vector between vertex and camera
-	Vec3Df cameraVector = MyCameraPosition - vertexPos;
+Vec3Df diffuseOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material){
+	Vec3Df Diffuse = BLACK;
 	normal.normalize();
-	cameraVector.normalize();
-	/*
-    for(unsigned int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
-        Vec3Df lightPos = MyLightPositions[light_index];
-        // Vector between light and vertex
-        Vec3Df lightVector = lightPos - vertexPos;
-        // Normalize the vectors
-        lightVector.normalize();
-    
-        // Calculate the dot product
-        float dotProduct = Vec3Df::dotProduct(normal, lightVector);
-        // Clamp the dot product
-        if (dotProduct < 0) {
-            // Clamp to zero
-            return Vec3Df(0, 0, 0);
-        }
-        else {
-            // Reflection on mirror can be calculated through
-            // r = v - 2 * dot(n, v) * n
-            // where v is the viewpoint vector, r is the reflection vector and n is hte normal
-            // with all vectors normalized. (According to slide 74 Ray Tracing)
-            Vec3Df R = 2 * dotProduct * normal - lightVector;
-            float dotProduct2=Vec3Df::dotProduct(cameraVector, R);
-            if(dotProduct2>0){
-                teller++;
-                //std::cout<<teller<<std::endl;
-            }
-            if (dotProduct2 < 0) {
-                // Clamp to zero
-                return Vec3Df(0, 0, 0);
-            }
-            
-            
-            
-            //return material.Ks() * powf(dotProduct2, material.Ns());
-        }
-	 }*/
-	Vec3Df p = phongSpecularOnly(material, vertexPos, normal, MyCameraPosition);
-    return p;
+
+	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
+		Vec3Df L = MyLightPositions[i];
+		
+		L.normalize();
+
+		//calculate diffuse color for current light source.
+		Diffuse += material->Kd() * max(Vec3Df::dotProduct(normal, L), 0);
+	}
+
+	return Diffuse;
+}
+
+Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material){
+	Vec3Df Specularity = BLACK;
+	Vec3Df V = MyCameraPosition - vertexPos;//calculate view vector
+	normal.normalize();
+	V.normalize();
+
+	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
+		Vec3Df lightPos = MyLightPositions[i];
+		Vec3Df L = lightPos - vertexPos;//calculate light vector
+		
+		L.normalize();
+		
+		//Calculate the half vector between the light vector and the view vector.
+		Vec3Df H = V + L;
+		H.normalize();
+
+		//Calc specular term, if normal is > 90 degrees away from light then use 0.
+		float SpecularTerm = max(Vec3Df::dotProduct(H, normal), 0);
+		SpecularTerm = pow(SpecularTerm, material->Ns());
+		//printf("ks = %i\n", material->Ks());
+		Specularity += material->Ks() * SpecularTerm;
+	}
+
+	return Specularity;
 }
 
 
-void max0(Vec3Df *v){
-	v[0] = (0 > v->p[0]) ? 0 : v[0];
-	v[1] = (0 > v->p[1]) ? 0 : v[1];
-	v[2] = (0 > v->p[2]) ? 0 : v[2];
+/*
+Returns the Material object corresponding to the triangle with index index.
+*/
+Material getMaterial(int index){
+	int materialIndex = MyMesh.triangleMaterials[index];
+	return MyMesh.materials[materialIndex];
 }
 
 //return the color of your pixel.
 Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 {
+	Vec3Df pixelcolor = BLACK;
+
 	Vec3Df intersectOut;
 	int index = intersectMesh(origin, dest, &intersectOut);
 
 	if (index == -1)//no intersection with triangle.
-		return Vec3Df(0, 0, 0);
+		return pixelcolor;
     
-    Vec3Df normal = normals[index];
-    int materialIndex = MyMesh.triangleMaterials[index];
-    Material material = MyMesh.materials[materialIndex];
+#ifdef _DEBUG
+	char buffer[128];
+	printf("index = %i\nintersectOut = %s\n", index, intersectOut.toString(buffer, sizeof(buffer)));
+#endif
 
-    
-    Vec3Df res(0,0,0);
-	if (Ambient){
-		res += material.Ka();
+    Vec3Df normal = normals[index];
+	Material material = getMaterial(index);
+
+	if (Ambient && material.has_Ka()){
+		pixelcolor += material.Ka();
 	}
-	if (Diffuse){
-		Vec3Df diffusePart = diffuseOnly(intersectOut, normal, material);
-		max0(&diffusePart);
-		res = Vec3Df(res.p[0] + diffusePart.p[0], res.p[1] + diffusePart.p[1], res.p[2] + diffusePart.p[2]);
+	if (Diffuse && material.has_Kd()){
+		pixelcolor += diffuseOnly(intersectOut, normal, &material);
 	}
-	if (Specular){
-		Vec3Df specularPart = phongSpecularOnly(intersectOut, normal, material);
-		max0(&specularPart);
-		if (res.p[0] != 0.0f)
-			res = Vec3Df(res.p[0] + specularPart.p[0], res.p[1] + specularPart.p[1], res.p[2] + specularPart.p[2]);
+	if (Specular && material.has_Ks() && material.has_Ns()){
+		pixelcolor += blinnPhongSpecularOnly(intersectOut, normal, &material);
     }
     
-    return res;
-    
-    // Diffuse and specular, clipped between 0 and 1
-    // return Vec3Df(fmax(fmin(diffusePart[0] + specularPart[0], 1), 0),
-    //            fmax(fmin(diffusePart[1] + specularPart[1], 1), 0),
-    //            fmax(fmin(diffusePart[2] + specularPart[2], 1), 0));
-    
-    // Diffuse + specular
-    // return diffuseOnly(diffusePart, normal, material) + phongSpecularOnly(intersectOut, normal, material);
-    
-    // Everything white (to test intersect)
-    //return Vec3Df(1,1,1);
+	return pixelcolor;
 }
 
 
@@ -348,25 +292,22 @@ void yourKeyboardFunc(char key, int x, int y){
         case '1':
             Ambient=!Ambient;
             break;
-
 		case '2':
-			Reflection = !Reflection;
-			break;
-		case '3':
 			Diffuse = !Diffuse;
 			break;
-		case '4':
+		case '3':
 			Specular = !Specular;
 			break;
-		case '9':
+		case '4':
+			Reflection = !Reflection;
+			break;
+		case '5':
 			Shadows = !Shadows;
 			break;
-
-            
 		case '+':
 			pixelfactorX++;
 			pixelfactorY++;
-			printf("pixelfactorX = %i\npixelfactorY = %i\n", pixelfactorX, pixelfactorY);
+
 			break;
 		case '-':
 			pixelfactorX--;
@@ -375,56 +316,26 @@ void yourKeyboardFunc(char key, int x, int y){
 				pixelfactorX = 1;
 			if (pixelfactorY < 1)
 				pixelfactorY = 1;
-			printf("pixelfactorX = %i\npixelfactorY = %i\n", pixelfactorX, pixelfactorY);
 			break;
     }
-    
-    // Activate ambient lighting.
-    if(Ambient){
-        std::cout<<std::endl<<("DEBUG --- Ambient on")<<std::endl;
-    }
-    else{
-        std::cout<<std::endl<<("DEBUG --- Ambient off")<<std::endl;
-    }
-    
-    // Activate reflection.
-    if(Reflection){
-        std::cout<<std::endl<<("DEBUG --- Reflection on")<<std::endl;
-    }
-    else{
-        std::cout<<std::endl<<("DEBUG --- Reflection off")<<std::endl;
-    }
-
-	// Activate specularity.
-	if (Diffuse){
-		std::cout << std::endl << ("DEBUG --- Diffuse on") << std::endl;
-	}
-	else{
-		std::cout << std::endl << ("DEBUG --- Diffuse off") << std::endl;
-	}
-
-	// Activate specularity.
-	if (Specular){
-		std::cout << std::endl << ("DEBUG --- Speculartiy on") << std::endl;
-	}
-	else{
-		std::cout << std::endl << ("DEBUG --- Specularity off") << std::endl;
-	}
-
-	// Activate shadow.
-	if (Shadows){
-		std::cout << std::endl << ("DEBUG --- Shadows on") << std::endl;
-	}
-	else{
-		std::cout << std::endl << ("DEBUG --- Shadows off") << std::endl;
-	}
+	
+	cout << endl << "------SETTINGS------" << endl
+		 << "Ammbient " << (Ambient ? "ON" : "OFF") << endl
+		 << "Diffuse " << (Diffuse ? "ON" : "OFF") << endl
+		 << "Specular "	<< (Specular ? "ON" : "OFF") << endl
+		 << "Reflection " << (Reflection ? "ON" : "OFF") << endl
+		 << "Shadow " << (Shadows ? "ON" : "OFF") << endl
+		 << "pixelfactorX = " << pixelfactorX << endl
+		 << "pixelfactorY = " << pixelfactorY << endl
+		 << "--------------------" << endl;
+		
 	// do what you want with the keyboard input t.
 	// x, y are the screen position
 
 	//here I use it to get the coordinates of a ray, which I then draw in the debug function.
 	produceRay(x, y, testRayOrigin, testRayDestination);
 
-	std::cout<<" pressed! The mouse was in location "<<x<<","<<y<<"!"<<std::endl;
+	cout<<" pressed! The mouse was in location "<<x<<","<<y<<"!"<<std::endl;
 }
 
 

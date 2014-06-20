@@ -253,6 +253,10 @@ public:
                       n[0]*q[0] + n[1]*q[1] + n[2]*q[2]);
     }
 
+	char* toString(char* buffer, size_t size){
+		sprintf_s(buffer, size, "(%f, %f, %f)", p[0], p[1], p[2]);
+		return buffer;
+	}
 
 	T * pointer()
 	{
