@@ -393,8 +393,7 @@ void keyboard(unsigned char key, int x, int y)
 		for (unsigned int y = 0; y < WindowSize_Y; ++y){
 			if (lastP < (y+0.0) / WindowSize_Y * 50){
 				lastP++;
-				char c[] = { 219, 0x00 };
-				printf(c);
+				printf("*");
 			}
 			for (unsigned int x = 0; x < WindowSize_X; ++x){
 				Vec3Df rgb = Vec3Df(0, 0, 0);

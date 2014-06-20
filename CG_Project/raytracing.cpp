@@ -183,7 +183,7 @@ Vec3Df diffuseOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material
 		L.normalize();
 
 		//calculate diffuse color for current light source.
-		Diffuse += material->Kd() * max(Vec3Df::dotProduct(normal, L), 0);
+		Diffuse += material->Kd() * max(Vec3Df::dotProduct(normal, L), 0.0f);
 	}
 
 	return Diffuse;
@@ -206,7 +206,7 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 		H.normalize();
 
 		//Calc specular term, if normal is > 90 degrees away from light then use 0.
-		float SpecularTerm = max(Vec3Df::dotProduct(H, normal), 0);
+		float SpecularTerm = max(Vec3Df::dotProduct(H, normal), 0.0f);
 		SpecularTerm = pow(SpecularTerm, material->Ns());
 		//printf("ks = %i\n", material->Ks());
 		Specularity += material->Ks() * SpecularTerm;
