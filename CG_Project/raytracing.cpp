@@ -12,12 +12,13 @@
 #endif
 #include "raytracing.h"
 
-bool Ambient = false;
-bool Reflection = false;
-bool Shadows = false;
-bool Specular = false;
+bool Ambient = true;
+bool Diffuse = true;
+bool Reflection = true;
+bool Shadows = true;
+bool Specular = true;
 
-#define pixelfactor 3
+#define pixelfactor 1
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
@@ -190,6 +191,26 @@ Vec3Df diffuseOnly(const Vec3Df& vertexPos, Vec3Df& normal, Material& material) 
     return Kd;
 }
 
+Vec3Df phongSpecularOnly(Material m, const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & lightPos, const Vec3Df & cameraPos)
+{
+	Vec3Df lightDir = (lightPos - vertexPos);
+	lightDir.normalize();
+	Vec3Df viewDir = (cameraPos - vertexPos);
+	Vec3Df r = (2 * Vec3Df::dotProduct(lightDir, normal) * normal - lightDir);
+	r = m.Ks() * pow(max(Vec3Df::dotProduct(viewDir, r), 0), m.Ns());
+	return r;
+}
+
+Vec3Df phongSpecularOnly(Material m, const Vec3Df & vertexPos, Vec3Df & normal, const Vec3Df & cameraPos)
+{
+	Vec3Df rbg;
+	for (unsigned int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
+		rbg += phongSpecularOnly(m, vertexPos, normal, MyLightPositions[light_index], MyCameraPosition);
+	}
+	return rbg;
+}
+
+
 // Phong (!) Shading Specularity (http://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_shading_model)
 // Follow the course, only calculate Ks pow(dot(V,R),shininess), where V is the view vector and R is the Reflection vector of the light (like in pool billard computed from the LightPos, vertexPos and normal).
 // When computing specularities like this, verify that the light is on the right side of the surface, with respect to the normal
@@ -200,7 +221,7 @@ Vec3Df phongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material& ma
 	Vec3Df cameraVector = MyCameraPosition - vertexPos;
 	normal.normalize();
 	cameraVector.normalize();
-    
+	/*
     for(unsigned int light_index = 0; light_index < MyLightPositions.size(); light_index++) {
         Vec3Df lightPos = MyLightPositions[light_index];
         // Vector between light and vertex
@@ -224,7 +245,7 @@ Vec3Df phongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material& ma
             float dotProduct2=Vec3Df::dotProduct(cameraVector, R);
             if(dotProduct2>0){
                 teller++;
-                std::cout<<teller<<std::endl;
+                //std::cout<<teller<<std::endl;
             }
             if (dotProduct2 < 0) {
                 // Clamp to zero
@@ -235,9 +256,16 @@ Vec3Df phongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material& ma
             
             //return material.Ks() * powf(dotProduct2, material.Ns());
         }
-	 }
-    
-    return Vec3Df(0,0,0);
+	 }*/
+	Vec3Df p = phongSpecularOnly(material, vertexPos, normal, MyCameraPosition);
+    return p;
+}
+
+
+void max0(Vec3Df *v){
+	v[0] = (0 > v->p[0]) ? 0 : v[0];
+	v[1] = (0 > v->p[1]) ? 0 : v[1];
+	v[2] = (0 > v->p[2]) ? 0 : v[2];
 }
 
 //return the color of your pixel.
@@ -255,15 +283,20 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 
     
     Vec3Df res(0,0,0);
-    Vec3Df diffusePart = diffuseOnly(intersectOut, normal, material);
-    Vec3Df specularPart = phongSpecularOnly(intersectOut, normal, material);
-    if(Ambient){
-        res+=diffusePart;
+	if (Ambient){
+		res += material.Ka();
+	}
+	if (Diffuse){
+		Vec3Df diffusePart = diffuseOnly(intersectOut, normal, material);
+		max0(&diffusePart);
+		res = Vec3Df(res.p[0] + diffusePart.p[0], res.p[1] + diffusePart.p[1], res.p[2] + diffusePart.p[2]);
+	}
+	if (Specular){
+		Vec3Df specularPart = phongSpecularOnly(intersectOut, normal, material);
+		max0(&specularPart);
+		if (res.p[0] != 0.0f)
+			res = Vec3Df(res.p[0] + specularPart.p[0], res.p[1] + specularPart.p[1], res.p[2] + specularPart.p[2]);
     }
-    if(Specular){
-        res+=specularPart;
-    }
-    
     
     return res;
     
@@ -315,18 +348,21 @@ void yourKeyboardFunc(char key, int x, int y){
         case '1':
             Ambient=!Ambient;
             break;
+
+		case '2':
+			Reflection = !Reflection;
+			break;
+		case '3':
+			Diffuse = !Diffuse;
+			break;
+		case '4':
+			Specular = !Specular;
+			break;
+		case '9':
+			Shadows = !Shadows;
+			break;
+
             
-        case '2':
-             Specular=!Specular;
-            break;
-            
-        case '3':
-            Shadows=!Shadows;
-            break;
-            
-        case '4':
-            Reflection=!Reflection;
-            break;
 		case '+':
 			pixelfactorX++;
 			pixelfactorY++;
@@ -358,22 +394,30 @@ void yourKeyboardFunc(char key, int x, int y){
     else{
         std::cout<<std::endl<<("DEBUG --- Reflection off")<<std::endl;
     }
-    
-    // Activate shadow.
-    if(Shadows){
-        std::cout<<std::endl<<("DEBUG --- Shadows on")<<std::endl;
-    }
-    else{
-        std::cout<<std::endl<<("DEBUG --- Shadows off")<<std::endl;
-    }
-    
-    // Activate specularity.
-    if(Specular){
-        std::cout<<std::endl<<("DEBUG --- Speculartiy on")<<std::endl;
-    }
-    else{
-        std::cout<<std::endl<<("DEBUG --- Specularity off")<<std::endl;
-    }
+
+	// Activate specularity.
+	if (Diffuse){
+		std::cout << std::endl << ("DEBUG --- Diffuse on") << std::endl;
+	}
+	else{
+		std::cout << std::endl << ("DEBUG --- Diffuse off") << std::endl;
+	}
+
+	// Activate specularity.
+	if (Specular){
+		std::cout << std::endl << ("DEBUG --- Speculartiy on") << std::endl;
+	}
+	else{
+		std::cout << std::endl << ("DEBUG --- Specularity off") << std::endl;
+	}
+
+	// Activate shadow.
+	if (Shadows){
+		std::cout << std::endl << ("DEBUG --- Shadows on") << std::endl;
+	}
+	else{
+		std::cout << std::endl << ("DEBUG --- Shadows off") << std::endl;
+	}
 	// do what you want with the keyboard input t.
 	// x, y are the screen position
 

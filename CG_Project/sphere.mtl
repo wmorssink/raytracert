@@ -1,10 +1,11 @@
-newmtl Default_Smoothing
-Ka 0 0 0
-Kd 0.784314 0.784314 0.784314
-Ks 0 0 0
-Ni 1
-Ns 400
-Tf 1 1 1
-d 1
-map_Kd sphere.bmp
+# Blender MTL File: 'None'
+# Material Count: 1
 
+newmtl None
+Ns 80
+illum 4
+Kd 0.00 0.80 0.00
+Ka 0.00 0.10 0.10
+Tf 1.00 1.00 1.00
+Ks 0.8 0.8 0.8
+d 1

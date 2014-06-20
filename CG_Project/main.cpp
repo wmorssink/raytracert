@@ -387,7 +387,15 @@ void keyboard(unsigned char key, int x, int y)
 		float divY = (WindowSize_Y * pixelfactorY - 1);
 		int raysPerPixel = (pixelfactorX * pixelfactorY);
 
+		int lastP = 0;
+		printf("__________________________________________________\n");
+		
 		for (unsigned int y = 0; y < WindowSize_Y; ++y){
+			if (lastP < (y+0.0) / WindowSize_Y * 50){
+				lastP++;
+				char c[] = { 219, 0x00 };
+				printf(c);
+			}
 			for (unsigned int x = 0; x < WindowSize_X; ++x){
 				Vec3Df rgb = Vec3Df(0, 0, 0);
 
@@ -420,6 +428,9 @@ void keyboard(unsigned char key, int x, int y)
 			result.writeImage("/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/result.ppm");
 		#else
 			result.writeImage("result.ppm");
+			#ifdef WIN32
+				ShellExecute(NULL, L"open", L"OpenSeeIt.exe", L"result.ppm", NULL, SW_SHOW);
+			#endif
 		#endif
 		
 		break;
