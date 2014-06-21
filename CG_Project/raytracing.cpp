@@ -173,46 +173,50 @@ int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 }
 
 
-Vec3Df diffuseOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material){
+Vec3Df diffuseOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, Vec3Df lightpos){
 	Vec3Df Diffuse = BLACK;
 	normal.normalize();
-
-	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
-		Vec3Df L = MyLightPositions[i];
-		
-		L.normalize();
-
+	lightpos.normalize();
 		//calculate diffuse color for current light source.
-		Diffuse += material->Kd() * max(Vec3Df::dotProduct(normal, L), 0.0f);
-	}
-
+		Diffuse += material->Kd() * max(Vec3Df::dotProduct(normal, lightpos), 0.0f);
+	
 	return Diffuse;
 }
 
-Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material){
+Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, Vec3Df lightpos){
 	Vec3Df Specularity = BLACK;
 	Vec3Df V = MyCameraPosition - vertexPos;//calculate view vector
 	normal.normalize();
 	V.normalize();
 
-	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
-		Vec3Df lightPos = MyLightPositions[i];
-		Vec3Df L = lightPos - vertexPos;//calculate light vector
+	Vec3Df L = lightpos - vertexPos;//calculate light vector
 		
-		L.normalize();
+	L.normalize();
 		
-		//Calculate the half vector between the light vector and the view vector.
-		Vec3Df H = V + L;
-		H.normalize();
+	//Calculate the half vector between the light vector and the view vector.
+	Vec3Df H = V + L;
+	H.normalize();
 
-		//Calc specular term, if normal is > 90 degrees away from light then use 0.
-		float SpecularTerm = max(Vec3Df::dotProduct(H, normal), 0.0f);
-		SpecularTerm = pow(SpecularTerm, material->Ns());
-		//printf("ks = %i\n", material->Ks());
-		Specularity += material->Ks() * SpecularTerm;
-	}
+	//Calc specular term, if normal is > 90 degrees away from light then use 0.
+	float SpecularTerm = max(Vec3Df::dotProduct(H, normal), 0.0f);
+	SpecularTerm = pow(SpecularTerm, material->Ns());
+	//printf("ks = %i\n", material->Ks());
+	Specularity += material->Ks() * SpecularTerm;
+	
 
 	return Specularity;
+}
+
+bool isShadow(Vec3Df intersection, Vec3Df light_pos){
+
+	Vec3Df intersectOut;
+	int index = intersectMesh(intersection, light_pos, &intersectOut);
+	if (index == -1){
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 
 
@@ -242,16 +246,22 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 
     Vec3Df normal = normals[index];
 	Material material = getMaterial(index);
-
 	if (Ambient && material.has_Ka()){
 		pixelcolor += material.Ka();
 	}
-	if (Diffuse && material.has_Kd()){
-		pixelcolor += diffuseOnly(intersectOut, normal, &material);
+	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
+		Vec3Df L = MyLightPositions[i];
+		if (!isShadow(intersectOut, L))
+		{
+			if (Diffuse && material.has_Kd()){
+				pixelcolor += diffuseOnly(intersectOut, normal, &material, L);
+			}
+			if (Specular && material.has_Ks() && material.has_Ns()){
+				pixelcolor += blinnPhongSpecularOnly(intersectOut, normal, &material, L);
+			}
+		}
+
 	}
-	if (Specular && material.has_Ks() && material.has_Ns()){
-		pixelcolor += blinnPhongSpecularOnly(intersectOut, normal, &material);
-    }
     
 	return pixelcolor;
 }

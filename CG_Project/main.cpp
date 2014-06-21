@@ -427,9 +427,9 @@ void keyboard(unsigned char key, int x, int y)
 			result.writeImage("/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/result.ppm");
 		#else
 			result.writeImage("result.ppm");
-			#ifdef WIN32
-				ShellExecute(NULL, L"open", L"OpenSeeIt.exe", L"result.ppm", NULL, SW_SHOW);
-			#endif
+		//	#ifdef WIN32
+			//	ShellExecute(NULL, L"open", L"OpenSeeIt.exe", L"result.ppm", NULL, SW_SHOW);
+			//#endif
 		#endif
 		
 		break;
