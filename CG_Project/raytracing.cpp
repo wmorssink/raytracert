@@ -209,14 +209,20 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 
 bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 
-	Vec3Df intersectOut;
-	int index = intersectMesh(intersection, light_pos, &intersectOut);
-	if (index == -1){
-		return false;
+	Vec3Df intersectOut2;
+	//adding offset for depth bias
+	intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
+	//checking for intersect between light source and first intersection point
+	int index = intersectMesh(intersection, light_pos, &intersectOut2);
+	if (Shadows){
+		if (index == -1){
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
-	else {
-		return true;
-	}
+	return false;
 }
 
 
@@ -249,6 +255,7 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 	if (Ambient && material.has_Ka()){
 		pixelcolor += material.Ka();
 	}
+	//loop for going through all light sources (we removed it from the other functions)
 	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
 		Vec3Df L = MyLightPositions[i];
 		if (!isShadow(intersectOut, L))
@@ -260,7 +267,6 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 				pixelcolor += blinnPhongSpecularOnly(intersectOut, normal, &material, L);
 			}
 		}
-
 	}
     
 	return pixelcolor;

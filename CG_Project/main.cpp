@@ -146,11 +146,11 @@ Mesh MyMesh; //Main mesh
 enum { TRIANGLE=0, MODEL=1, };
 unsigned int type = MODEL;
 
-unsigned int WindowSize_X = 800;  // largeur fenetre
-unsigned int WindowSize_Y = 800;  // hauteur fenetre
+unsigned int WindowSize_X = 500;  // largeur fenetre
+unsigned int WindowSize_Y = 500;  // hauteur fenetre
 
-unsigned int RayTracingResolutionX = 800;  // largeur fenetre
-unsigned int RayTracingResolutionY = 800;  // largeur fenetre
+unsigned int RayTracingResolutionX = 500;  // largeur fenetre
+unsigned int RayTracingResolutionY = 500;  // largeur fenetre
 
 
 
