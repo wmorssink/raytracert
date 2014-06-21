@@ -18,7 +18,7 @@ bool Reflection = true;
 bool Shadows = true;
 bool Specular = true;
 
-#define pixelfactor 3	//use 3 for good looking, 1 for fast performance
+#define pixelfactor 1	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
