@@ -222,10 +222,9 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 	}
 }
 
-Vec3Df reflection(const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
+Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
 
-	Vec3Df V = MyCameraPosition - vertexPos;
-	Vec3Df R = 2 * Vec3Df::dotProduct(normal, V)*normal;
+	Vec3Df R = 2 * Vec3Df::dotProduct(normal, ray)*normal;
 	return trace(vertexPos, R, lvl);
 }
 
@@ -236,7 +235,7 @@ Vec3Df refraction(const Vec3Df & vertexPos, Vec3Df & normal, Material* material,
 	return trace(vertexPos, R, lvl);
 }
 
-Vec3Df shade(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
+Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
 
 	Vec3Df pixelcolor = BLACK;
 	if (Ambient && material->has_Ka()){
@@ -255,12 +254,12 @@ Vec3Df shade(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int 
 		}
 	}
 	if (Reflection && lvl < max_lvl){
-		Vec3Df offset = Vec3Df(0.01, 0.01, 0.01);
-		pixelcolor += material->Ks() * reflection((vertexPos+offset), normal, lvl + 1);
+		Vec3Df offset = Vec3Df(0.001, 0.001, 0.001);
+		pixelcolor += material->Ks() * reflection(ray,(vertexPos+offset), normal, lvl + 1);
 	}
-	//if (Refraction && (material->Tr()<1) && lvl < max_lvl){
+	if (Refraction && (material->Tr()<1) && lvl < max_lvl){
 		//pixelcolor += performRayTracing(vertexPos, R, lvl + 1);
-	//}
+	}
 
 	return pixelcolor;
 
@@ -277,6 +276,7 @@ Material getMaterial(int index){
 Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
 
 	Vec3Df pixelcolor = BLACK;
+	Vec3Df ray = origin - dest;
 
 	Vec3Df intersectOut;
 	int index = intersectMesh(origin, dest, &intersectOut);
@@ -286,7 +286,7 @@ Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
 	}
 	Vec3Df normal = normals[index];
 	Material material = getMaterial(index);
-	pixelcolor = shade(intersectOut, normal, &material, lvl);
+	pixelcolor = shade(ray, intersectOut, normal, &material, lvl);
 
 	return pixelcolor;
 
