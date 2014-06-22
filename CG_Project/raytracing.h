@@ -23,8 +23,9 @@ void init(char* fileName);
 //it is defined elsewhere
 void produceRay(int x_I, int y_I, Vec3Df & origin, Vec3Df & dest);
 
-Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl);
 
+//function to trace the rays (needed for recursion)
+Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl);
 
 //your main function to rewrite
 Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest);

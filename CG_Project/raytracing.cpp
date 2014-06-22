@@ -226,14 +226,14 @@ Vec3Df reflection(const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
 
 	Vec3Df V = MyCameraPosition - vertexPos;
 	Vec3Df R = 2 * Vec3Df::dotProduct(normal, V)*normal;
-	return trace(vertexPos, R, lvl + 1);
+	return trace(vertexPos, R, lvl);
 }
 
 Vec3Df refraction(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
 
 	Vec3Df V = MyCameraPosition - vertexPos;
 	Vec3Df R = 2 * Vec3Df::dotProduct(normal, V)*normal;
-	return trace(vertexPos, R, lvl + 1);
+	return trace(vertexPos, R, lvl);
 }
 
 Vec3Df shade(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
@@ -255,7 +255,8 @@ Vec3Df shade(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int 
 		}
 	}
 	if (Reflection && lvl < max_lvl){
-		pixelcolor += reflection(vertexPos, normal, lvl + 1);
+		Vec3Df offset = Vec3Df(0.01, 0.01, 0.01);
+		pixelcolor += material->Ks() * reflection((vertexPos+offset), normal, lvl + 1);
 	}
 	//if (Refraction && (material->Tr()<1) && lvl < max_lvl){
 		//pixelcolor += performRayTracing(vertexPos, R, lvl + 1);
