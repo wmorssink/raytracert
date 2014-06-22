@@ -210,7 +210,8 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 
 	Vec3Df intersectOut;
-	int index = intersectMesh(intersection, light_pos, &intersectOut);
+	Vec3Df offset = Vec3Df(0.1, 0.1, 0.1);
+	int index = intersectMesh((intersection+offset), light_pos, &intersectOut);
 	if (index == -1){
 		return false;
 	}
