@@ -17,12 +17,14 @@ bool Diffuse = true;
 bool Reflection = true;
 bool Shadows = true;
 bool Specular = true;
+bool Refraction = true;
 
 #define pixelfactor 1	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
 #define BLACK Vec3Df(0, 0, 0);
+int max_lvl = 4;
 
 using namespace std;
 
@@ -208,7 +210,6 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 }
 
 bool isShadow(Vec3Df intersection, Vec3Df light_pos){
-
 	Vec3Df intersectOut2;
 	//adding offset for depth bias
 	intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
@@ -225,6 +226,71 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 	return false;
 }
 
+Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
+	Vec3Df R = 2 * Vec3Df::dotProduct(normal, ray)*normal;
+	return trace(vertexPos, R, lvl);
+}
+
+
+//src http://ray-tracer-concept.blogspot.nl/2011/12/refraction.html
+Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
+
+	float ni = material->Ni();
+	float check = Vec3Df::dotProduct(ray, normal);
+	if (check < 0){
+		float nr = 1 / ni;
+		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(normal, ray), 2));
+		if (root >= 0.0){
+			root = sqrt(root);
+			Vec3Df T = (nr*Vec3Df::dotProduct(normal, ray) - root)*normal - nr*ray;
+			Vec3Df dest = vertexPos + T;
+			return material->Tr() * trace(vertexPos, dest, lvl);
+		}
+	}
+	else{
+		float nr = ni;
+		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(-normal, ray), 2));
+		if (root >= 0.0){
+			root = sqrt(root);
+			Vec3Df T = (nr*Vec3Df::dotProduct((-normal), ray) - root)*(-normal) - nr*ray;
+			Vec3Df dest = vertexPos + T;
+			return material->Tr() * trace(vertexPos, dest, lvl);
+		}
+	}
+	//Vec3Df R = 2 * Vec3Df::dotProduct(normal, V)*normal;
+	return Vec3Df(0,0,0);
+}
+
+Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
+
+	Vec3Df pixelcolor = BLACK;
+	if (Ambient && material->has_Ka()){
+		pixelcolor += material->Ka();
+	}
+	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
+		Vec3Df L = MyLightPositions[i];
+		if (!isShadow(vertexPos, L))
+		{
+			if (Diffuse && material->has_Kd()){
+				pixelcolor += diffuseOnly(vertexPos, normal, material, L);
+			}
+			if (Specular && material->has_Ks() && material->has_Ns()){
+				pixelcolor += blinnPhongSpecularOnly(vertexPos, normal, material, L);
+			}
+		}
+	}
+	if (Reflection && lvl < max_lvl){
+		Vec3Df offset = Vec3Df(0.001, 0.001, 0.001);
+		pixelcolor += material->Ks() * reflection(ray,(vertexPos+offset), normal, lvl + 1);
+	}
+	if (Refraction && (material->Tr()<1) && lvl < max_lvl){
+		Vec3Df offset = Vec3Df(0.001, 0.001, 0.001);
+		pixelcolor += refraction(ray, (vertexPos+offset), normal, material, lvl +1);
+	}
+
+	return pixelcolor;
+
+}
 
 /*
 Returns the Material object corresponding to the triangle with index index.
@@ -234,41 +300,33 @@ Material getMaterial(int index){
 	return MyMesh.materials[materialIndex];
 }
 
+Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
+
+	Vec3Df pixelcolor = BLACK;
+	
+	Vec3Df intersectOut;
+	int index = intersectMesh(origin, dest, &intersectOut);
+
+	if (index == -1){//no intersection with triangle.
+		return pixelcolor;
+	}
+    
+	Vec3Df ray = origin - dest;
+	Vec3Df normal = normals[index];
+	Material material = getMaterial(index);
+	pixelcolor = shade(ray, intersectOut, normal, &material, lvl);
+
+	return pixelcolor;
+
+}
+
+
 //return the color of your pixel.
 Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 {
 	Vec3Df pixelcolor = BLACK;
-
-	Vec3Df intersectOut;
-	int index = intersectMesh(origin, dest, &intersectOut);
-
-	if (index == -1)//no intersection with triangle.
-		return pixelcolor;
-    
-#ifdef _DEBUG
-	char buffer[128];
-	printf("index = %i\nintersectOut = %s\n", index, intersectOut.toString(buffer, sizeof(buffer)));
-#endif
-
-    Vec3Df normal = normals[index];
-	Material material = getMaterial(index);
-	if (Ambient && material.has_Ka()){
-		pixelcolor += material.Ka();
-	}
-	//loop for going through all light sources (we removed it from the other functions)
-	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
-		Vec3Df L = MyLightPositions[i];
-		if (!isShadow(intersectOut, L))
-		{
-			if (Diffuse && material.has_Kd()){
-				pixelcolor += diffuseOnly(intersectOut, normal, &material, L);
-			}
-			if (Specular && material.has_Ks() && material.has_Ns()){
-				pixelcolor += blinnPhongSpecularOnly(intersectOut, normal, &material, L);
-			}
-		}
-	}
-    
+	int lvl = 0;
+	pixelcolor = trace(origin, dest, lvl);
 	return pixelcolor;
 }
 
@@ -320,6 +378,10 @@ void yourKeyboardFunc(char key, int x, int y){
 		case '5':
 			Shadows = !Shadows;
 			break;
+		case '6':
+			Refraction = !Refraction;
+			break;
+
 		case '+':
 			pixelfactorX++;
 			pixelfactorY++;
@@ -341,6 +403,7 @@ void yourKeyboardFunc(char key, int x, int y){
 		 << "Specular "	<< (Specular ? "ON" : "OFF") << endl
 		 << "Reflection " << (Reflection ? "ON" : "OFF") << endl
 		 << "Shadow " << (Shadows ? "ON" : "OFF") << endl
+		 << "Refraction " << (Refraction? "ON" : "OFF") << endl
 		 << "pixelfactorX = " << pixelfactorX << endl
 		 << "pixelfactorY = " << pixelfactorY << endl
 		 << "--------------------" << endl;

@@ -31,7 +31,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "179"
             endingLineNumber = "179"
-            landmarkName = "diffuseOnly(const Vec3Df&amp; vertexPos, Vec3Df&amp; normal, Material&amp; material)"
+            landmarkName = "diffuseOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material* material, Vec3Df lightpos)"
             landmarkType = "7">
             <Locations>
                <Location
@@ -107,7 +107,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "173"
             endingLineNumber = "173"
-            landmarkName = "diffuseOnly(const Vec3Df&amp; vertexPos, Vec3Df&amp; normal, Material&amp; material)"
+            landmarkName = "intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -122,9 +122,7 @@
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "175"
-            endingLineNumber = "175"
-            landmarkName = "diffuseOnly(const Vec3Df&amp; vertexPos, Vec3Df&amp; normal, Material&amp; material)"
-            landmarkType = "7">
+            endingLineNumber = "175">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -138,9 +136,7 @@
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "176"
-            endingLineNumber = "176"
-            landmarkName = "diffuseOnly(const Vec3Df&amp; vertexPos, Vec3Df&amp; normal, Material&amp; material)"
-            landmarkType = "7">
+            endingLineNumber = "176">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -150,7 +146,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877887.111364"
+            timestampString = "425057386.210927"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "257"
@@ -166,7 +162,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877887.111364"
+            timestampString = "425057386.210927"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "256"
@@ -202,9 +198,7 @@
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "225"
-            endingLineNumber = "225"
-            landmarkName = "phongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material&amp; material)"
-            landmarkType = "7">
+            endingLineNumber = "225">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -218,9 +212,7 @@
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "209"
-            endingLineNumber = "209"
-            landmarkName = "phongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material&amp; material)"
-            landmarkType = "7">
+            endingLineNumber = "209">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -235,7 +227,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "220"
             endingLineNumber = "220"
-            landmarkName = "phongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material&amp; material)"
+            landmarkName = "isShadow(Vec3Df intersection, Vec3Df light_pos)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -250,9 +242,7 @@
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "222"
-            endingLineNumber = "222"
-            landmarkName = "phongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material&amp; material)"
-            landmarkType = "7">
+            endingLineNumber = "222">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -282,9 +272,7 @@
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "223"
-            endingLineNumber = "223"
-            landmarkName = "phongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material&amp; material)"
-            landmarkType = "7">
+            endingLineNumber = "223">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -298,9 +286,7 @@
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "227"
-            endingLineNumber = "227"
-            landmarkName = "phongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material&amp; material)"
-            landmarkType = "7">
+            endingLineNumber = "227">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -315,7 +301,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "228"
             endingLineNumber = "228"
-            landmarkName = "phongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material&amp; material)"
+            landmarkName = "getMaterial(int index)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
