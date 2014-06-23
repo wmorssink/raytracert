@@ -19,7 +19,7 @@ bool Shadows = true;
 bool Specular = true;
 bool Refraction = true;
 
-#define pixelfactor 3	//use 3 for good looking, 1 for fast performance
+#define pixelfactor 1	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
@@ -210,16 +210,20 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 }
 
 bool isShadow(Vec3Df intersection, Vec3Df light_pos){
-
-	Vec3Df intersectOut;
-	Vec3Df offset = Vec3Df(0.1, 0.1, 0.1);
-	int index = intersectMesh((intersection+offset), light_pos, &intersectOut);
-	if (index == -1){
-		return false;
+	Vec3Df intersectOut2;
+	//adding offset for depth bias
+	intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
+	//checking for intersect between light source and first intersection point
+	int index = intersectMesh(intersection, light_pos, &intersectOut2);
+	if (Shadows){
+		if (index == -1){
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
-	else {
-		return true;
-	}
+	return false;
 }
 
 Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
@@ -306,6 +310,7 @@ Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
 	if (index == -1){//no intersection with triangle.
 		return pixelcolor;
 	}
+    
 	Vec3Df ray = origin - dest;
 	Vec3Df normal = normals[index];
 	Material material = getMaterial(index);
@@ -322,7 +327,6 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 	Vec3Df pixelcolor = BLACK;
 	int lvl = 0;
 	pixelcolor = trace(origin, dest, lvl);
-    
 	return pixelcolor;
 }
 
