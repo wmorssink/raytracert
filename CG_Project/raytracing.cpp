@@ -152,24 +152,13 @@ int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 	Vec3Df intersect; //intersection point of closest triangle
 	int index = -1;	  //index of closest triangle
 	float dist = FLT_MAX;
+	int* ind;
 
-	Vec3Df R[] = { origin, dest };
-	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++){
-		Vec3Df tempIntersect;
-		Triangle triangle = MyMesh.triangles[i];
-		Vec3Df T[3] = { MyMesh.vertices[triangle.v[0]].p, MyMesh.vertices[triangle.v[1]].p, MyMesh.vertices[triangle.v[2]].p };
-
-
-		if (rayIntersectTriangle(R, T, &tempIntersect)){
-			//ray intersects with the current triangle
-			float tempDist = Vec3Df::distance(origin, tempIntersect);
-			if (tempDist < dist){
-				dist = tempDist;
-				index = i;
-				intersect = tempIntersect;
-			}
-		}
+	if(kdtree(origin, dest, intersectOut, ind)){
+		intersect = intersectOut;
+		index = ind;
 	}
+
 	memcpy(intersectOut, &intersect, sizeof(Vec3Df));
 	return index;
 }
@@ -568,4 +557,46 @@ Vec3Df boxIntersectTest(Vec3Df ray[], float x, float y, float z, float w, float 
 		return Vec3Df(1, 0, 0);
 	}
 	return Vec3Df(0, 1, 0);
+}
+
+box makekdtree(){
+	// making a list of all the triangles for the box method
+	std::vector<element> list;
+	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++) {
+		Triangle ctriangle = MyMesh.triangles[i];
+		element e = new element(ctriangle,i);
+		list.push_back(e);
+	}
+
+	float l [3];
+	float h [3];
+
+	for (unsigned int i = 0;i < 3; i++){
+		l[i] = std::numeric_limits<float>::max();
+		h[i] = std::numeric_limits<float>::min();
+	}
+
+	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++) {
+		Vec3Df current = MyMesh.triangles.at(i);
+		for (unsigned int j = 0; i < 3; i++) {
+			if (l[i] < current.p[i])
+				l[i] = current.p[i];
+			if (h[i] > current.p[i])
+				h[i] = current.p[i];
+		}
+	}
+
+	Vec3Df temp = new Vec3Df(l[0],l[1],l[2]);
+
+	return new Box(temp, h, list, 1);
+}
+
+bool kdtree(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut, int* ind) {
+
+	Vec3Df intersect; //intersection point of closest triangle
+	int index = -1;	  //index of closest triangle
+	float dist = FLT_MAX;
+
+	Vec3Df R[] = { origin, dest };
+	return globalbox.intersect(R, intersectOut, ind);
 }
