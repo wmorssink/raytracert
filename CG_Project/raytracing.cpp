@@ -44,7 +44,7 @@ void init(char* fileName)
 	//feel free to replace cube by a path to another model
 	//please realize that not all OBJ files will successfully load.
 	//Nonetheless, if they come from Blender, they should.
-    
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	if (fileName == NULL){
 		#ifdef __APPLE__
 			/*
@@ -236,14 +236,23 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 }
 
 Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
-	Vec3Df R = 2 * Vec3Df::dotProduct(normal, ray)*normal;
+	Vec3Df R = -(2 * Vec3Df::dotProduct(normal, ray)*normal);
 	return trace(vertexPos, R, lvl);
+}
+
+void addOffset(Vec3Df* point, Vec3Df* towardsPoint){
+	Vec3Df vector = (*towardsPoint) - (*point);
+	char buff[128];
+	//cout << "addoffset" <<  vector.toString(buff, 128) << endl;
+	vector.normalize();
+	vector *= 0.009;
+	*point += vector;
 }
 
 
 //src http://ray-tracer-concept.blogspot.nl/2011/12/refraction.html
 Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
-
+	
 	float ni = material->Ni();
 	float check = Vec3Df::dotProduct(ray, normal);
 	if (check < 0){
@@ -252,8 +261,9 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 		if (root >= 0.0){
 			root = sqrt(root);
 			Vec3Df T = (nr*Vec3Df::dotProduct(normal, ray) - root)*normal - nr*ray;
-			Vec3Df dest = vertexPos + T;
-			return material->Tr() * trace(vertexPos, dest, lvl);
+			Vec3Df point = vertexPos;
+			addOffset(&point, &T);
+			return (1-material->Tr()) * trace(point, T, lvl+1);
 		}
 	}
 	else{
@@ -262,11 +272,12 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 		if (root >= 0.0){
 			root = sqrt(root);
 			Vec3Df T = (nr*Vec3Df::dotProduct((-normal), ray) - root)*(-normal) - nr*ray;
-			Vec3Df dest = vertexPos + T;
-			return material->Tr() * trace(vertexPos, dest, lvl);
+			Vec3Df point = vertexPos;
+			addOffset(&point, &T);
+			return (1 - material->Tr()) * trace(point, T, lvl + 1);
+			
 		}
 	}
-	//Vec3Df R = 2 * Vec3Df::dotProduct(normal, V)*normal;
 	return Vec3Df(0,0,0);
 }
 
@@ -281,10 +292,10 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 		if (!isShadow(vertexPos, L))
 		{
 			if (Diffuse && material->has_Kd()){
-				pixelcolor += diffuseOnly(vertexPos, normal, material, L);
+				pixelcolor += material->Tr() * diffuseOnly(vertexPos, normal, material, L);
 			}
 			if (Specular && material->has_Ks() && material->has_Ns()){
-				pixelcolor += blinnPhongSpecularOnly(vertexPos, normal, material, L);
+				pixelcolor += material->Tr() * blinnPhongSpecularOnly(vertexPos, normal, material, L);
 			}
 		}
 	}
@@ -294,7 +305,7 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 	}
 	if (Refraction && (material->Tr()<1) && lvl < max_lvl){
 		Vec3Df offset = Vec3Df(0.001, 0.001, 0.001);
-		pixelcolor += refraction(ray, (vertexPos+offset), normal, material, lvl +1);
+		pixelcolor += refraction(ray, vertexPos, normal, material, lvl +1);
 	}
 
 	return pixelcolor;
@@ -320,7 +331,7 @@ Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
 		return pixelcolor;
 	}
     
-	Vec3Df ray = origin - dest;
+	Vec3Df ray = dest - origin;
 	Vec3Df normal = normals[index];
 	Material material = getMaterial(index);
 
