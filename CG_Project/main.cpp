@@ -1,4 +1,4 @@
-    #ifdef WIN32
+#ifdef WIN32
 #include <windows.h>
 #endif
 #ifdef __APPLE__
@@ -146,11 +146,11 @@ Mesh MyMesh; //Main mesh
 enum { TRIANGLE=0, MODEL=1, };
 unsigned int type = MODEL;
 
-unsigned int WindowSize_X = 500;  // largeur fenetre
-unsigned int WindowSize_Y = 500;  // hauteur fenetre
+unsigned int WindowSize_X = 800;  // largeur fenetre
+unsigned int WindowSize_Y = 800;  // hauteur fenetre
 
-unsigned int RayTracingResolutionX = 500;  // largeur fenetre
-unsigned int RayTracingResolutionY = 500;  // largeur fenetre
+unsigned int RayTracingResolutionX = 800;  // largeur fenetre
+unsigned int RayTracingResolutionY = 800;  // largeur fenetre
 
 
 
@@ -393,7 +393,8 @@ void keyboard(unsigned char key, int x, int y)
 		for (unsigned int y = 0; y < WindowSize_Y; ++y){
 			if (lastP < (y+0.0) / WindowSize_Y * 50){
 				lastP++;
-				printf("*");
+				char c[] = { 219, 0x00 };
+				printf(c);
 			}
 			for (unsigned int x = 0; x < WindowSize_X; ++x){
 				Vec3Df rgb = Vec3Df(0, 0, 0);
@@ -424,12 +425,12 @@ void keyboard(unsigned char key, int x, int y)
 		 * global variable / function, but I couldn't manage to get this done.
 		 * This way, at least the Windows users have no problems...
 		 */
-			result.writeImage("/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/result.ppm");
+			result.writeImage("/Users/daan/dev/git/cg/TI1805RayTracer/CG_Project/result.ppm");
 		#else
 			result.writeImage("result.ppm");
-		//	#ifdef WIN32
-			//	ShellExecute(NULL, L"open", L"OpenSeeIt.exe", L"result.ppm", NULL, SW_SHOW);
-			//#endif
+			#ifdef WIN32
+				ShellExecute(NULL, L"open", L"OpenSeeIt.exe", L"result.ppm", NULL, SW_SHOW);
+			#endif
 		#endif
 		
 		break;

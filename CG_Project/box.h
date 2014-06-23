@@ -9,6 +9,8 @@
 #define BOX_H_
 #include "node.h"
 #include "element.h"
+#include <vector>
+#include <array>
 
 class box : public node {
 public:

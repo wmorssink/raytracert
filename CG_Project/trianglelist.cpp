@@ -1,18 +1,21 @@
 #include "trianglelist.h"
 #include <cstddef>
 #include <float.h>
+#include "node.h"
+#include "Vec3D.h"
+#include "mesh.h"
 
-class trianglelist {
-	public:
-		Triangle t[];
-		int index[];
 
-	trianglelist(std::vector<element> _t) {
-		for(unsigned i = 0; i < _t.size(); i++) {
-			t[i] = _t.at(i).t;
-			index[i] = _t.at(i).index;
-		}
+
+Triangle t[];
+int index[];
+
+void trianglelist(std::vector<element> _t) {
+	for(unsigned i = 0; i < _t.size(); i++) {
+		t[i] = _t.at(i).t;
+		index[i] = _t.at(i).index;
 	}
+};
 
 	bool hasEmpty(){
 		return false;
@@ -26,7 +29,7 @@ class trianglelist {
 
 	int intersectTriangle(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 		Vec3Df intersect; //intersection point of closest triangle
-		int index = -1;	  //index of closest triangle
+		int indexa = -1;	  //index of closest triangle
 		float dist = FLT_MAX;
 
 		Vec3Df R[] = { origin, dest };
@@ -42,14 +45,14 @@ class trianglelist {
 				float tempDist = Vec3Df::distance(origin, tempIntersect);
 				if (tempDist < dist){
 					dist = tempDist;
-					index = index[i];
+					indexa = index[0];
 					intersect = tempIntersect;
 				}
 			}
 		}
 		memcpy(intersectOut, &intersect, sizeof(Vec3Df));
-		return index;
+		return indexa;
 	}
 
 
-};
+

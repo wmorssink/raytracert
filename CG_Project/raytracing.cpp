@@ -11,6 +11,7 @@
 #include <GL/glut.h>
 #endif
 #include "raytracing.h"
+#include "box.h"
 
 bool Ambient = true;
 bool Diffuse = true;
@@ -50,7 +51,7 @@ void init(char* fileName)
 			* global variable / function, but I couldn't manage to get this done.
 			* This way, at least the Windows users have no problems...
 			*/
-			fileName = "/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/cube.obj";
+			fileName = "/Users/daan/dev/git/cg/TI1805RayTracer/CG_Project/cube.obj";
 		#else
 			//set default model
 			fileName = "cube.obj";//"dodgeColorTest.obj"
@@ -588,7 +589,7 @@ box makekdtree(){
 
 	Vec3Df temp = new Vec3Df(l[0],l[1],l[2]);
 
-	return new Box(temp, h, list, 1);
+	return Box(temp, h, list, 1);
 }
 
 bool kdtree(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut, int* ind) {

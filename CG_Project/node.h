@@ -8,6 +8,8 @@
 #ifndef NODE_H_
 #define NODE_H_
 
+#include "Vec3D.h"
+
 class node {
 public:
 	node();

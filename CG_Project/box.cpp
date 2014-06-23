@@ -4,9 +4,10 @@
 #include <limits>
 #include <float.h>
 #include <typeinfo>
+#include <trianglelist.h>
 
 unsigned int GUESS = 3;
-unsigned float GUESS_PERCENT = 0.1f;
+float GUESS_PERCENT = 0.1f;
 unsigned int SPLIT_AT = 24;
 
 Vec3Df loc;
@@ -47,7 +48,7 @@ void Box(Vec3Df _loc, float _a[], std::vector<element> triangles, char as) {
 	if (l[eff].size() > SPLIT_AT) {
 		float la[] = a;
 		la[as] = lw;
-		left = new Box(loc, la, l[eff], ((as + 1) % 3));
+		left = Box(loc, la, l[eff], ((as + 1) % 3));
 	} else {
 		std::vector<element> left = new trianglelist(l[eff]);
 	}
@@ -175,22 +176,22 @@ bool intersect(Vec3Df R[], Vec3Df* intersectOut, int* ind){
 		return false;
 	}
 	else if (leftD == FLT_MAX){
-		return right.intersect(R, intersectOut);
+		return right.intersect(R, intersectOut, ind);
 	}
 	else if(rightD == FLT_MAX){
-		return left.intersect(R, intersectOut);
+		return left.intersect(R, intersectOut, ind);
 	}
 	else if (leftD < rightD) {
-		if (left.intersect(R, intersectOut)) {
+		if (left.intersect(R, intersectOut, ind)) {
 			return true;
 		}
-		return right.intersect(R, intersectOut);
+		return right.intersect(R, intersectOut, ind);
 	}
 	else if (rightD < leftD) {
-		if (right.intersect(R, intersectOut)) {
+		if (right.intersect(R, intersectOut, ind)) {
 			return true;
 		}
-		return left.intersect(R, intersectOut);
+		return left.intersect(R, intersectOut, ind);
 	}
 	return false;
 }

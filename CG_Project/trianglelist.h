@@ -1,6 +1,7 @@
 #ifndef TRIANGLELIST_H_
 #define TRIANGLELIST_H_
 #include "node.h"
+#include "Vec3D.h"
 
 class trianglelist : public node {
 public:
