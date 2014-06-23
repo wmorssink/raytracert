@@ -30,9 +30,11 @@ using namespace std;
 
 vector<Vec3Df> normals;
 
-//temporary variables
-Vec3Df testRayOrigin;
-Vec3Df testRayDestination;
+//for ray debugging
+vector<Vec3Df> o, d;
+bool DebugMode = false;
+//////////
+
 int teller=0;
 
 //use this function for any preprocessing of the mesh.
@@ -154,11 +156,29 @@ int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 	float dist = FLT_MAX;
 	int* ind;
 
+	/*
 	if(kdtree(origin, dest, intersectOut, ind)){
 		intersect = intersectOut;
 		index = ind;
 	}
+	*/
+	Vec3Df R[] = { origin, dest };
+	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++){
+		Vec3Df tempIntersect;
+		Triangle triangle = MyMesh.triangles[i];
+		Vec3Df T[3] = { MyMesh.vertices[triangle.v[0]].p, MyMesh.vertices[triangle.v[1]].p, MyMesh.vertices[triangle.v[2]].p };
 
+
+		if (rayIntersectTriangle(R, T, &tempIntersect)){
+			//ray intersects with the current triangle
+			float tempDist = Vec3Df::distance(origin, tempIntersect);
+			if (tempDist < dist){
+				dist = tempDist;
+				index = i;
+				intersect = tempIntersect;
+			}
+		}
+	}
 	memcpy(intersectOut, &intersect, sizeof(Vec3Df));
 	return index;
 }
@@ -303,6 +323,11 @@ Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
 	Vec3Df ray = origin - dest;
 	Vec3Df normal = normals[index];
 	Material material = getMaterial(index);
+
+	if (DebugMode){
+		o.push_back(origin);
+		d.push_back(intersectOut);
+	}
 	pixelcolor = shade(ray, intersectOut, normal, &material, lvl);
 
 	return pixelcolor;
@@ -326,7 +351,20 @@ int getTeller(){
 }
 
 
-
+/*
+Draws the lines representing a light ray
+*/
+void drawRayDebugger(){
+	glColor3f(1, 0, 0);
+	glBegin(GL_LINES);
+	for (int i = 0; i < o.size(); i++){
+		glColor3f(1, 0, 0);
+		glVertex3f(o[i][0], o[i][1], o[i][2]);
+		glColor3f(0, 1, 0);
+		glVertex3f(d[i][0], d[i][1], d[i][2]);
+	}
+	glEnd();
+}
 
 void yourDebugDraw()
 {
@@ -336,14 +374,12 @@ void yourDebugDraw()
 	//as an example: 
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glDisable(GL_LIGHTING);
-	glColor3f(0,1,1);
-	glBegin(GL_LINES);
-	glVertex3f(testRayOrigin[0], testRayOrigin[1], testRayOrigin[2]);
-	glVertex3f(testRayDestination[0], testRayDestination[1], testRayDestination[2]);
-	glEnd();
+
+	drawRayDebugger();
+
 	glPointSize(10);
 	glBegin(GL_POINTS);
-	glVertex3fv(MyLightPositions[0].pointer());
+		glVertex3fv(MyLightPositions[0].pointer());
 	glEnd();
 	glPopAttrib();
 
@@ -384,26 +420,54 @@ void yourKeyboardFunc(char key, int x, int y){
 			if (pixelfactorY < 1)
 				pixelfactorY = 1;
 			break;
-    }
-	
+		case '0':
+			DebugMode = !DebugMode;
+			cout << "Debug Mode:\n 0 to enable / disable debug mode\n d to shoot & draw a ray trace.\n c to clear ray trace history.\n";
+			break;
+
+		case 'd': //Shoot ray to mouse position
+			if (DebugMode){
+				Vec3Df origin, dest, intersectOut;
+				produceRay(x, y, origin, dest);
+
+				int i = intersectMesh(origin, dest, &intersectOut);
+
+				o.push_back(origin);
+				d.push_back(intersectOut);
+
+				Vec3Df pixelcolor = BLACK;
+				int lvl = 0;
+				pixelcolor = trace(origin, dest, lvl);
+
+				char buffer[128];
+				cout << "Ray trace color = " << pixelcolor.toString(buffer, sizeof(buffer)) << endl;
+			}
+			return;
+		case 'c'://clear ray debugger
+			o.clear();
+			d.clear();
+			cout << "Ray trace history cleared\n";
+			return;
+
+	}
+
 	cout << endl << "------SETTINGS------" << endl
-		 << "Ammbient " << (Ambient ? "ON" : "OFF") << endl
-		 << "Diffuse " << (Diffuse ? "ON" : "OFF") << endl
-		 << "Specular "	<< (Specular ? "ON" : "OFF") << endl
-		 << "Reflection " << (Reflection ? "ON" : "OFF") << endl
-		 << "Shadow " << (Shadows ? "ON" : "OFF") << endl
-		 << "Refraction " << (Refraction? "ON" : "OFF") << endl
-		 << "pixelfactorX = " << pixelfactorX << endl
-		 << "pixelfactorY = " << pixelfactorY << endl
-		 << "--------------------" << endl;
-		
+		<< "Ammbient " << (Ambient ? "ON" : "OFF") << endl
+		<< "Diffuse " << (Diffuse ? "ON" : "OFF") << endl
+		<< "Specular " << (Specular ? "ON" : "OFF") << endl
+		<< "Reflection " << (Reflection ? "ON" : "OFF") << endl
+		<< "Shadow " << (Shadows ? "ON" : "OFF") << endl
+		<< "Refraction " << (Refraction ? "ON" : "OFF") << endl
+		<< "pixelfactorX = " << pixelfactorX << endl
+		<< "pixelfactorY = " << pixelfactorY << endl
+		<< "DebugMode " << (DebugMode ? "ON" : "OFF") << endl
+		<< "--------------------" << endl;
+
 	// do what you want with the keyboard input t.
 	// x, y are the screen position
 
-	//here I use it to get the coordinates of a ray, which I then draw in the debug function.
-	produceRay(x, y, testRayOrigin, testRayDestination);
 
-	cout<<" pressed! The mouse was in location "<<x<<","<<y<<"!"<<std::endl;
+	cout << " pressed! The mouse was in location " << x << "," << y << "!" << std::endl;
 }
 
 
@@ -558,7 +622,7 @@ Vec3Df boxIntersectTest(Vec3Df ray[], float x, float y, float z, float w, float 
 	}
 	return Vec3Df(0, 1, 0);
 }
-
+/*
 box makekdtree(){
 	// making a list of all the triangles for the box method
 	std::vector<element> list;
@@ -599,4 +663,4 @@ bool kdtree(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut, int* ind) {
 
 	Vec3Df R[] = { origin, dest };
 	return globalbox.intersect(R, intersectOut, ind);
-}
+}*/
