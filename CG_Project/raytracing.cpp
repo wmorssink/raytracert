@@ -18,13 +18,14 @@ bool Reflection = true;
 bool Shadows = true;
 bool Specular = true;
 bool Refraction = true;
+bool WireFrame = false;
 
 #define pixelfactor 1	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
 #define BLACK Vec3Df(0, 0, 0);
-int max_lvl = 4;
+int max_lvl = 25;
 
 using namespace std;
 
@@ -44,7 +45,7 @@ void init(char* fileName)
 	//feel free to replace cube by a path to another model
 	//please realize that not all OBJ files will successfully load.
 	//Nonetheless, if they come from Blender, they should.
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	
 	if (fileName == NULL){
 		#ifdef __APPLE__
 			/*
@@ -73,6 +74,7 @@ void calculateNormals(){
 		Vec3Df edge01 = MyMesh.vertices[MyMesh.triangles[i].v[1]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
 		Vec3Df edge02 = MyMesh.vertices[MyMesh.triangles[i].v[2]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
 		Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
+		normal.normalize();
 		normals.push_back(normal);
     }
 }
@@ -235,54 +237,73 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 	return false;
 }
 
-Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
-	Vec3Df R = -(2 * Vec3Df::dotProduct(normal, ray)*normal);
-	return trace(vertexPos, R, lvl);
-}
 
 void addOffset(Vec3Df* point, Vec3Df* towardsPoint){
 	Vec3Df vector = (*towardsPoint) - (*point);
 	char buff[128];
 	//cout << "addoffset" <<  vector.toString(buff, 128) << endl;
 	vector.normalize();
-	vector *= 0.009;
+	vector *= 0.01;
 	*point += vector;
 }
 
 
+Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
+	ray.normalize();
+	Vec3Df R = ray -(2 * Vec3Df::dotProduct(normal, ray)*normal);
+	Vec3Df point = vertexPos;
+	Vec3Df dest = vertexPos + R;
+	addOffset(&point, &dest);
+	return trace(point, dest, lvl);
+}
+
+
+
 //src http://ray-tracer-concept.blogspot.nl/2011/12/refraction.html
 Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
-	
+	/*Vec3Df point = vertexPos;
+	addOffset(&point, &ray);
+
+	return (1 - material->Tr()) * trace(point, ray, lvl + 1);
+	*/
+
 	float ni = material->Ni();
+	ray.normalize();
 	float check = Vec3Df::dotProduct(ray, normal);
 	if (check < 0){
+		printf("im in if\n");
 		float nr = 1 / ni;
 		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(normal, ray), 2));
 		if (root >= 0.0){
+			printf("if root\n");
 			root = sqrt(root);
-			Vec3Df T = (nr*Vec3Df::dotProduct(normal, ray) - root)*normal - nr*ray;
+			Vec3Df T = (nr*Vec3Df::dotProduct(normal, ray) - root)*(normal) - nr*ray;
 			Vec3Df point = vertexPos;
-			addOffset(&point, &T);
-			return (1-material->Tr()) * trace(point, T, lvl+1);
+			Vec3Df dest = vertexPos + T;
+			addOffset(&point, &dest);
+			return (1-material->Tr()) * trace(point, dest, lvl+1);
 		}
 	}
 	else{
+		printf("im in else\n");
 		float nr = ni;
-		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(-normal, ray), 2));
+		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct((-normal), ray), 2));
 		if (root >= 0.0){
+			printf("else root\n");
 			root = sqrt(root);
 			Vec3Df T = (nr*Vec3Df::dotProduct((-normal), ray) - root)*(-normal) - nr*ray;
 			Vec3Df point = vertexPos;
-			addOffset(&point, &T);
-			return (1 - material->Tr()) * trace(point, T, lvl + 1);
+			Vec3Df dest = point + T;
+			addOffset(&point, &dest);
+			return (1 - material->Tr()) * trace(point, dest, lvl + 1);
 			
 		}
 	}
+	printf("total reflection");
 	return Vec3Df(0,0,0);
 }
 
 Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
-
 	Vec3Df pixelcolor = BLACK;
 	if (Ambient && material->has_Ka()){
 		pixelcolor += material->Ka();
@@ -300,11 +321,10 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 		}
 	}
 	if (Reflection && lvl < max_lvl){
-		Vec3Df offset = Vec3Df(0.001, 0.001, 0.001);
-		pixelcolor += material->Ks() * reflection(ray,(vertexPos+offset), normal, lvl + 1);
+		pixelcolor += material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 	}
+	//printf("Tr = %f\n", material->Tr());
 	if (Refraction && (material->Tr()<1) && lvl < max_lvl){
-		Vec3Df offset = Vec3Df(0.001, 0.001, 0.001);
 		pixelcolor += refraction(ray, vertexPos, normal, material, lvl +1);
 	}
 
@@ -460,6 +480,20 @@ void yourKeyboardFunc(char key, int x, int y){
 			cout << "Ray trace history cleared\n";
 			return;
 
+		case 'w':
+			WireFrame = !WireFrame;
+			if (WireFrame){
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				cout << "WireFrame enabled\n";
+			}
+			else{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				cout << "WireFrame disabled\n";
+			}
+			break;
+
+		default:
+			break;
 	}
 
 	cout << endl << "------SETTINGS------" << endl
@@ -472,6 +506,7 @@ void yourKeyboardFunc(char key, int x, int y){
 		<< "pixelfactorX = " << pixelfactorX << endl
 		<< "pixelfactorY = " << pixelfactorY << endl
 		<< "DebugMode " << (DebugMode ? "ON" : "OFF") << endl
+		<< "WireFrame " << (WireFrame ? "ON" : "OFF") << endl
 		<< "--------------------" << endl;
 
 	// do what you want with the keyboard input t.
