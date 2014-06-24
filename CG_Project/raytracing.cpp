@@ -265,9 +265,9 @@ Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl
 	return trace(point, dest, lvl);
 }
 
-
-
-
+/*
+	Calculate refraction vector and trace it further
+*/
 Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
 	float ni = material->Ni();
 	ray.normalize();
