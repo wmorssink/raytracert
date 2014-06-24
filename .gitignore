@@ -19,5 +19,7 @@
 *.out
 *.app
 
-# XCode project
+
+.DS_Store
+/CG_Project.xcodeproj
 CG_Project.xcodeproj/
