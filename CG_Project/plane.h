@@ -11,6 +11,14 @@
 #include "Vec3D.h"
 #include "mesh.h"
 
+struct Ray {
+    Vec3Df origin, destination;
+
+    Ray(Vec3Df _origin, Vec3Df _destination)
+        : origin(_origin), destination(_destination) {}
+};
+
+
 class Plane {
     public :
     Vec3Df point, normal;
@@ -34,16 +42,16 @@ class Plane {
         material = _material;
     }
     
-    inline bool intersect(const Vec3Df &origin, const Vec3Df &destination, Vec3Df* intersection) {
-        Vec3Df direction = origin - destination;
+    inline bool intersect(const Ray &ray, Vec3Df* intersection) {
+        Vec3Df direction = ray.origin - ray.destination;
         // (2)	dot(point_in_plane,plane_normal) = distance_to_origin
         // or	dot(P,N) = k
         float k = Vec3Df::dotProduct(point, normal);
         // t=(k-dot(C,N))/dot(D,N)
         float dn = Vec3Df::dotProduct(direction, normal);
         if(dn > 0) {
-            float t = (k - Vec3Df::dotProduct(origin, normal)) / dn;
-            Vec3Df i = origin + t * direction;
+            float t = (k - Vec3Df::dotProduct(ray.origin, normal)) / dn;
+            Vec3Df i = ray.origin + t * direction;
             memcpy(intersection, &i, sizeof(Vec3Df));
             return true;
         }
@@ -78,7 +86,7 @@ class Rectangle {
         a = _a; b = _b; c = _c; d = _d; material = _material;
     }
     
-    inline bool intersect(const Vec3Df &origin, const Vec3Df &destination, Vec3Df* intersection) {
+    inline bool intersect(const Ray &ray, Vec3Df* intersection) {
         const float SMALL_NUM = 0.00001f;
         // R[0] = add(R[0], R[1]);
         Vec3Df u, v, n, dir, w0, w;
@@ -90,8 +98,8 @@ class Rectangle {
         n = Vec3Df::crossProduct(u, v); // cross product
         if (n[0] == 0 && n[1] == 0 && n[2] == 0) // triangle is degenerate
             return false; // do not deal with this case
-        dir = origin - destination; // R[1] - R[0]; // ray direction vector
-        w0 = destination - a;
+        dir = ray.origin - ray.destination; // R[1] - R[0]; // ray direction vector
+        w0 = ray.destination - a;
         q = Vec3Df::dotProduct(n, dir);
         p = -Vec3Df::dotProduct(n, w0);
         if (abs(q) < SMALL_NUM) { // ray is parallel to triangle plane
@@ -109,7 +117,7 @@ class Rectangle {
         }
         // for a segment, also test if (r > 1.0) => no intersect
         
-        Vec3Df I = destination + r * dir; // intersect point of ray and
+        Vec3Df I = ray.destination + r * dir; // intersect point of ray and
         // plane
         // is I inside T?
         float uu, uv, vv, wu, wv, D;
@@ -140,7 +148,82 @@ class Rectangle {
 };
 
 class Box {
-    
+    /**
+     * boxIntersect
+     *
+     * @param ray
+     * 			Vector3f {origin, destination}
+     * @param loc
+     *            Location of the box (corner with the smallest coordinates)
+     * @param w
+     *            Width of the box (>0) (x-coord)
+     * @param l
+     *            Length of the box (>0) (z-coord)
+     * @param h
+     *            Height of the box (>0) (y-coord)
+     * @param returnIntersect
+     * 			closest Intersection point with the box
+     * @return Closest intersection with the box from the ray start
+    float rayIntersectBox(Vec3Df ray[], Vec3Df loc, float w, float l, float h, Vec3Df* returnIntersect) {
+        Vec3Df c = loc;
+        // Calculate points of box
+        c[0] += w;
+        c[1] += h;
+        c[2] += l;
+        Vec3Df rec[] = { loc, loc, loc, loc, c, c, c, c };
+        rec[1][0] += w;
+        rec[2][1] += h;
+        rec[3][2] += l;
+        rec[5][0] -= w;
+        rec[6][1] -= h;
+        rec[7][2] -= l;
+        
+        // Calculate closest rectangle intersection
+        float returnDistance = FLT_MAX;
+        Vec3Df inmem;
+        Vec3Df* in = &inmem;
+        if (rayIntersectRectangle(ray, rec[0], rec[1], rec[2], returnIntersect)) {
+            returnDistance = Vec3Df::distance(ray[0], *returnIntersect);
+        }
+        if (rayIntersectRectangle(ray, rec[0], rec[1], rec[3], in)) {
+            float distance = Vec3Df::distance(ray[0], *in);
+            if (distance < returnDistance) {
+                returnDistance = distance;
+                returnIntersect = in;
+            }
+        }
+        if (rayIntersectRectangle(ray, rec[0], rec[2], rec[3], in)) {
+            float distance = Vec3Df::distance(ray[0], *in);
+            if (distance < returnDistance) {
+                returnDistance = distance;
+                returnIntersect = in;
+            }
+        }
+        if (rayIntersectRectangle(ray, rec[4], rec[5], rec[6], in)) {
+            float distance = Vec3Df::distance(ray[0], *in);
+            if (distance < returnDistance) {
+                returnDistance = distance;
+                returnIntersect = in;
+            }
+        }
+        if (rayIntersectRectangle(ray, rec[4], rec[5], rec[7], in)) {
+            float distance = Vec3Df::distance(ray[0], *in);
+            if (distance < returnDistance) {
+                returnDistance = distance;
+                returnIntersect = in;
+            }
+        }
+        if (rayIntersectRectangle(ray, rec[5], rec[6], rec[7], in)) {
+            float distance = Vec3Df::distance(ray[0], *in);
+            if (distance < returnDistance) {
+                returnDistance = distance;
+                returnIntersect = in;
+            }
+        }
+        
+        return (returnDistance);
+     }
+     */
 };
 
 class Sphere {
@@ -179,9 +262,9 @@ class Sphere {
         center = _origin; radius = _radius; material = _material;
     }
     
-    inline bool intersect(const Vec3Df &origin, const Vec3Df &destination, Vec3Df* intersection) {
-        Vec3Df direction = origin -     destination;
-        Vec3Df op = origin - center; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
+    inline bool intersect(const Ray &ray, Vec3Df* intersection) {
+        Vec3Df direction = ray.origin - ray.destination;
+        Vec3Df op = ray.origin - center; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
      
         float eps=1e-4;
         float b = 2 * Vec3Df::dotProduct(op, direction);
@@ -194,7 +277,7 @@ class Sphere {
         } else {
             disc = sqrt(disc);
             float t = (t=-b-disc)>eps ? t : ((t=-b+disc)>eps ? t : 0);
-            Vec3Df I = destination + t * direction;
+            Vec3Df I = ray.destination + t * direction;
             memcpy(intersection, &I, sizeof(Vec3Df));
             return true;
         }

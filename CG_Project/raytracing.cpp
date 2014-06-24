@@ -20,7 +20,7 @@ bool Shadows = true;
 bool Specular = true;
 bool Refraction = true;
 
-#define pixelfactor 1	//use 3 for good looking, 1 for fast performance
+#define pixelfactor 3	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
@@ -34,7 +34,6 @@ vector<Vec3Df> normals;
 //temporary variables
 Vec3Df testRayOrigin;
 Vec3Df testRayDestination;
-int teller=0;
 
 //use this function for any preprocessing of the mesh.
 void init(char* fileName)
@@ -87,7 +86,7 @@ bool isNullVector(Vec3Df v){
 /*
 returns true if there is an intersect and outputs the intersection point as intersectOut.
 */
-bool rayIntersectTriangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut){
+bool rayIntersectTriangle(const Ray ray, Vec3Df T[], Vec3Df* intersectOut){
 	const float SMALL_NUM = 0.00001f;
 	// R[0] = add(R[0], R[1]);
 	Vec3Df u, v, n, dir, w0, w;
@@ -98,27 +97,24 @@ bool rayIntersectTriangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut){
 	v = T[2] - T[0];
 	n = Vec3Df::crossProduct(u, v); // cross product
 	if (isNullVector(n)) // triangle is degenerate
-		return NULL; // do not deal with this case
-	dir = R[1] - R[0]; // ray direction vector
-	w0 = R[0] - T[0];
+		return false; // do not deal with this case
+	dir = ray.destination - ray.origin; // ray direction vector
+	w0 = ray.origin - T[0];
 	b = Vec3Df::dotProduct(n, dir);
 	a = -Vec3Df::dotProduct(n, w0);
 	if (abs(b) < SMALL_NUM) { // ray is parallel to triangle plane
-		/*
-		* if (a == 0) // ray lies in triangle plane else // ray disjoint
-		* from plane
-		*/
-		return NULL;
+		// ray lies in triangle plane else // ray disjoint  from plane
+		return false;
 	}
 
 	// get intersect point of ray with triangle plane
 	r = a / b;
 	if (r < 0) { // ray goes away from triangle
-		return NULL; // => no intersect
+		return false; // => no intersect
 	}
 	// for a segment, also test if (r > 1.0) => no intersect
 
-	Vec3Df I = R[0] + r * dir; // intersect point of ray and
+	Vec3Df I = ray.origin + r * dir; // intersect point of ray and
 	// plane
 	// is I inside T?
 	float uu, uv, vv, wu, wv, D;
@@ -134,45 +130,57 @@ bool rayIntersectTriangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut){
 	float s, t;
 	s = (uv * wv - vv * wu) / D;
 	if (s < 0 || s > 1) { // I is outside T
-		return NULL;
+		return false;
 	}
 	t = (uv * wu - uu * wv) / D;
 	if (t < 0 || (s + t) > 1) { // I is outside T
-		return NULL;
+		return false;
 	}
 	memcpy(intersectOut, &I, sizeof(Vec3Df));
 	return true; // I is in T
 }
 
-/*
-returns the index of the triangle of the intersection in the mesh structure.
-returns -1 if no intersect is found.
-Also writes the intersection point of the triangle to intersectOut.
-*/
-int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
-	Vec3Df intersect; //intersection point of closest triangle
-	int index = -1;	  //index of closest triangle
-	float dist = FLT_MAX;
+Sphere spheres[] = { Sphere(), Sphere(Vec3Df(-1,-1,-1), .5) };
 
-	Vec3Df R[] = { origin, dest };
-	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++){
-		Vec3Df tempIntersect;
-		Triangle triangle = MyMesh.triangles[i];
+bool intersect(const Ray &ray, Vec3Df* intersectOut, Vec3Df* normalOut, Material* materialOut) {
+    Vec3Df intersect, normal, tempIntersect;
+    Material material, tempMaterial;
+    float dist = FLT_MAX; // Find the object with the shortest distance (first hit)
+    
+    for(unsigned long i = 0, s = MyMesh.triangles.size(); i < s; i++) {
+        Triangle triangle = MyMesh.triangles[i];
 		Vec3Df T[3] = { MyMesh.vertices[triangle.v[0]].p, MyMesh.vertices[triangle.v[1]].p, MyMesh.vertices[triangle.v[2]].p };
-
-
-		if (rayIntersectTriangle(R, T, &tempIntersect)){
+        if (rayIntersectTriangle(ray, T, &tempIntersect)){
 			//ray intersects with the current triangle
-			float tempDist = Vec3Df::distance(origin, tempIntersect);
+			float tempDist = Vec3Df::distance(ray.origin, tempIntersect);
 			if (tempDist < dist){
 				dist = tempDist;
-				index = i;
+                normal = normals[i];
+                int materialIndex = MyMesh.triangleMaterials[i];
+                material = MyMesh.materials[materialIndex];
 				intersect = tempIntersect;
 			}
 		}
-	}
+    }
+    
+    for(unsigned int i = 0, s = 2; i < s; i++) {
+        Sphere sphere = spheres[i];
+        if(sphere.intersect(ray, &tempIntersect)) {
+			//ray intersects with the current triangle
+			float tempDist = Vec3Df::distance(ray.origin, tempIntersect);
+			if (tempDist < dist){
+				dist = tempDist;
+                normal = sphere.center - tempIntersect;
+                material = sphere.material;
+				intersect = tempIntersect;
+			}
+        }
+    }
+    
 	memcpy(intersectOut, &intersect, sizeof(Vec3Df));
-	return index;
+	memcpy(normalOut, &normal, sizeof(Vec3Df));
+	memcpy(materialOut, &material, sizeof(Material));
+    return dist != FLT_MAX;
 }
 
 
@@ -211,21 +219,12 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 }
 
 bool isShadow(Vec3Df intersection, Vec3Df light_pos){
-	Vec3Df intersectOut2;
+	Vec3Df intersectOut, normalOut;
+    Material materialOut;
 	//adding offset for depth bias
 	intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
 	//checking for intersect between light source and first intersection point
-	//int index = intersectMesh(intersection, light_pos, &intersectOut2);
-    int index = -1;
-	if (Shadows){
-		if (index == -1){
-			return false;
-		}
-		else {
-			return true;
-		}
-	}
-	return false;
+    return Shadows && intersect(Ray(intersection, light_pos), &intersectOut, &normalOut, &materialOut);
 }
 
 Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
@@ -303,29 +302,15 @@ Material getMaterial(int index){
 }
 
 Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
-
 	Vec3Df pixelcolor = BLACK;
-/*
-	Vec3Df intersectOut;
-	int index = intersectMesh(origin, dest, &intersectOut);
-
-	if (index == -1){//no intersection with triangle.
-		return pixelcolor;
-	}
+	Vec3Df intersectOut, normalOut;
+    Material materialOut;
     
-	Vec3Df ray = origin - dest;
-	Vec3Df normal = normals[index];
-	Material material = getMaterial(index);
-	pixelcolor = shade(ray, intersectOut, normal, &material, lvl);
-*/
-    Vec3Df intersection;
-    Vec3Df ray = origin - dest;
-    Sphere sphere = Sphere();
-    if(sphere.intersect(origin, dest, &intersection)) {
-        Vec3Df normal = intersection - sphere.center;
-        return shade(ray, intersection,  normal, &sphere.material, lvl);
+    if(intersect(Ray(origin, dest), &intersectOut, &normalOut, &materialOut)) {
+        Vec3Df ray = origin - dest;
+        pixelcolor = shade(ray, intersectOut, normalOut, &materialOut, lvl);
     }
-	
+    
     return pixelcolor;
 
 }
@@ -339,15 +324,6 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 	pixelcolor = trace(origin, dest, lvl);
 	return pixelcolor;
 }
-
-
-
-int getTeller(){
-    return teller;
-}
-
-
-
 
 void yourDebugDraw()
 {
@@ -427,155 +403,3 @@ void yourKeyboardFunc(char key, int x, int y){
 	cout<<" pressed! The mouse was in location "<<x<<","<<y<<"!"<<std::endl;
 }
 
-
-
-/*
-returns true if there is an intersect and outputs the intersection point as intersectOut.
-*/
-bool rayIntersectRectangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut){
-	const float SMALL_NUM = 0.00001f;
-	// R[0] = add(R[0], R[1]);
-	Vec3Df u, v, n, dir, w0, w;
-	float r, a, b;
-
-	// get triangle edge vectors and plane normal
-	u = T[1] - T[0];
-	v = T[2] - T[0];
-	n = Vec3Df::crossProduct(u, v); // cross product
-	if (isNullVector(n)) // triangle is degenerate
-		return false; // do not deal with this case
-	dir = R[1] - R[0]; // ray direction vector
-	w0 = R[0] - T[0];
-	b = Vec3Df::dotProduct(n, dir);
-	a = -Vec3Df::dotProduct(n, w0);
-	if (abs(b) < SMALL_NUM) { // ray is parallel to triangle plane
-		/*
-		* if (a == 0) // ray lies in triangle plane else // ray disjoint
-		* from plane
-		*/
-		return false;
-	}
-
-	// get intersect point of ray with triangle plane
-	r = a / b;
-	if (r < 0) { // ray goes away from triangle
-		return false; // => no intersect
-	}
-	// for a segment, also test if (r > 1.0) => no intersect
-
-	Vec3Df I = R[0] + r * dir; // intersect point of ray and
-	// plane
-	// is I inside T?
-	float uu, uv, vv, wu, wv, D;
-	uu = Vec3Df::dotProduct(u, u);
-	uv = Vec3Df::dotProduct(u, v);
-	vv = Vec3Df::dotProduct(v, v);
-	w = I - T[0];
-	wu = Vec3Df::dotProduct(w, u);
-	wv = Vec3Df::dotProduct(w, v);
-	D = uv * uv - uu * vv;
-
-	// get and test parametric coords
-	float s, t;
-	s = (uv * wv - vv * wu) / D;
-	if (s < 0 || s > 1) { // I is outside T
-		return false;
-	}
-	t = (uv * wu - uu * wv) / D;
-	if (t < 0 || t > 1) { // I is outside T
-		return false;
-	}
-	memcpy(intersectOut, &I, sizeof(Vec3Df));
-	return true; // I is in T
-}
-
-bool rayIntersectRectangle(Vec3Df R[], Vec3Df v0, Vec3Df v1, Vec3Df v2, Vec3Df* intersectOut){
-	Vec3Df T[] = { v0, v1, v2 };
-	return rayIntersectRectangle(R, T, intersectOut);
-}
-
-/**
-* boxIntersect
-*
-* @param ray
-* 			Vector3f {origin, destination}
-* @param loc
-*            Location of the box (corner with the smallest coordinates)
-* @param w
-*            Width of the box (>0) (x-coord)
-* @param l
-*            Length of the box (>0) (z-coord)
-* @param h
-*            Height of the box (>0) (y-coord)
-* @param returnIntersect
-* 			closest Intersection point with the box
-* @return Closest intersection with the box from the ray start
-*/
-float rayIntersectBox(Vec3Df ray[], Vec3Df loc, float w, float l, float h, Vec3Df* returnIntersect) {
-	Vec3Df c = loc;
-	// Calculate points of box
-	c[0] += w;
-	c[1] += h;
-	c[2] += l;
-	Vec3Df rec[] = { loc, loc, loc, loc, c, c, c, c };
-	rec[1][0] += w;
-	rec[2][1] += h;
-	rec[3][2] += l;
-	rec[5][0] -= w;
-	rec[6][1] -= h;
-	rec[7][2] -= l;
-
-	// Calculate closest rectangle intersection
-	float returnDistance = FLT_MAX;
-	Vec3Df inmem;
-	Vec3Df* in = &inmem;
-	if (rayIntersectRectangle(ray, rec[0], rec[1], rec[2], returnIntersect)) {
-		returnDistance = Vec3Df::distance(ray[0], *returnIntersect);
-	}
-	if (rayIntersectRectangle(ray, rec[0], rec[1], rec[3], in)) {
-		float distance = Vec3Df::distance(ray[0], *in);
-		if (distance < returnDistance) {
-			returnDistance = distance;
-			returnIntersect = in;
-		}
-	}
-	if (rayIntersectRectangle(ray, rec[0], rec[2], rec[3], in)) {
-		float distance = Vec3Df::distance(ray[0], *in);
-		if (distance < returnDistance) {
-			returnDistance = distance;
-			returnIntersect = in;
-		}
-	}
-	if (rayIntersectRectangle(ray, rec[4], rec[5], rec[6], in)) {
-		float distance = Vec3Df::distance(ray[0], *in);
-		if (distance < returnDistance) {
-			returnDistance = distance;
-			returnIntersect = in;
-		}
-	}
-	if (rayIntersectRectangle(ray, rec[4], rec[5], rec[7], in)) {
-		float distance = Vec3Df::distance(ray[0], *in);
-		if (distance < returnDistance) {
-			returnDistance = distance;
-			returnIntersect = in;
-		}
-	}
-	if (rayIntersectRectangle(ray, rec[5], rec[6], rec[7], in)) {
-		float distance = Vec3Df::distance(ray[0], *in);
-		if (distance < returnDistance) {
-			returnDistance = distance;
-			returnIntersect = in;
-		}
-	}
-
-	return (returnDistance);
-}
-
-Vec3Df boxIntersectTest(Vec3Df ray[], float x, float y, float z, float w, float h, float l){
-	Vec3Df b = Vec3Df(0, 0, 0);
-	rayIntersectBox(ray, Vec3Df(x, y, z), w, h, l, &b);
-	if (!isNullVector(b)){
-		return Vec3Df(1, 0, 0);
-	}
-	return Vec3Df(0, 1, 0);
-}
