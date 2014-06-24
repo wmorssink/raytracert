@@ -254,7 +254,7 @@ public:
     }
 
 	char* toString(char* buffer, size_t size){
-		sprintf_s(buffer, size, "(%f, %f, %f)", p[0], p[1], p[2]);
+		// sprintf_s(buffer, size, "(%f, %f, %f)", p[0], p[1], p[2]);
 		return buffer;
 	}
 
