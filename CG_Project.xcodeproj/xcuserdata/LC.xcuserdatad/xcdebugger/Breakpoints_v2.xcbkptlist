@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877401.345636"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "167"
-            endingLineNumber = "167"
+            startingLineNumber = "168"
+            endingLineNumber = "168"
             landmarkName = "intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut)"
             landmarkType = "7">
          </BreakpointContent>
@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877401.345636"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "179"
-            endingLineNumber = "179"
+            startingLineNumber = "180"
+            endingLineNumber = "180"
             landmarkName = "diffuseOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material* material, Vec3Df lightpos)"
             landmarkType = "7">
             <Locations>
@@ -86,12 +86,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877887.111364"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "247"
-            endingLineNumber = "247"
-            landmarkName = "performRayTracing(const Vec3Df &amp; origin, const Vec3Df &amp; dest)"
+            startingLineNumber = "248"
+            endingLineNumber = "248"
+            landmarkName = "refraction(Vec3Df ray, const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material* material, int lvl)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -102,11 +102,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877401.345636"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "173"
-            endingLineNumber = "173"
+            startingLineNumber = "174"
+            endingLineNumber = "174"
             landmarkName = "intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut)"
             landmarkType = "7">
          </BreakpointContent>
@@ -118,25 +118,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877401.345636"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "175"
-            endingLineNumber = "175">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877401.345636"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "176"
-            endingLineNumber = "176">
+            endingLineNumber = "176"
+            landmarkName = "intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -146,12 +134,42 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "425057386.210927"
+            timestampString = "425311972.973587"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "177"
+            endingLineNumber = "177">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "CG_Project/raytracing.cpp"
+            timestampString = "425311972.973587"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "258"
+            endingLineNumber = "258"
+            landmarkName = "refraction(Vec3Df ray, const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material* material, int lvl)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "CG_Project/raytracing.cpp"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "257"
             endingLineNumber = "257"
-            landmarkName = "performRayTracing(const Vec3Df &amp; origin, const Vec3Df &amp; dest)"
+            landmarkName = "refraction(Vec3Df ray, const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material* material, int lvl)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -162,12 +180,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "425057386.210927"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "256"
-            endingLineNumber = "256"
-            landmarkName = "performRayTracing(const Vec3Df &amp; origin, const Vec3Df &amp; dest)"
+            startingLineNumber = "247"
+            endingLineNumber = "247"
+            landmarkName = "refraction(Vec3Df ray, const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material* material, int lvl)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -178,55 +196,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877887.111364"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "246"
-            endingLineNumber = "246"
-            landmarkName = "performRayTracing(const Vec3Df &amp; origin, const Vec3Df &amp; dest)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877887.111364"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "225"
-            endingLineNumber = "225">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877401.345636"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "209"
-            endingLineNumber = "209">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877887.111364"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "220"
-            endingLineNumber = "220"
+            startingLineNumber = "226"
+            endingLineNumber = "226"
             landmarkName = "isShadow(Vec3Df intersection, Vec3Df light_pos)"
             landmarkType = "7">
          </BreakpointContent>
@@ -238,11 +212,45 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424877887.111364"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "222"
-            endingLineNumber = "222">
+            startingLineNumber = "210"
+            endingLineNumber = "210"
+            landmarkName = "blinnPhongSpecularOnly(const Vec3Df &amp; vertexPos, Vec3Df &amp; normal, Material* material, Vec3Df lightpos)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "CG_Project/raytracing.cpp"
+            timestampString = "425311972.973587"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "221"
+            endingLineNumber = "221"
+            landmarkName = "isShadow(Vec3Df intersection, Vec3Df light_pos)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "CG_Project/raytracing.cpp"
+            timestampString = "425311972.973587"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "223"
+            endingLineNumber = "223"
+            landmarkName = "isShadow(Vec3Df intersection, Vec3Df light_pos)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -268,11 +276,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424881212.492678"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "223"
-            endingLineNumber = "223">
+            startingLineNumber = "224"
+            endingLineNumber = "224"
+            landmarkName = "isShadow(Vec3Df intersection, Vec3Df light_pos)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -282,27 +292,27 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424881223.690889"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "227"
-            endingLineNumber = "227">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "CG_Project/raytracing.cpp"
-            timestampString = "424881261.431022"
+            timestampString = "425311972.973587"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "228"
             endingLineNumber = "228"
-            landmarkName = "getMaterial(int index)"
+            landmarkName = "isShadow(Vec3Df intersection, Vec3Df light_pos)"
             landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "CG_Project/raytracing.cpp"
+            timestampString = "425311972.973587"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "229"
+            endingLineNumber = "229">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

@@ -18,6 +18,7 @@ bool Reflection = true;
 bool Shadows = true;
 bool Specular = true;
 bool Refraction = true;
+float radius=0.5;
 
 #define pixelfactor 1	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
@@ -50,7 +51,7 @@ void init(char* fileName)
 			* global variable / function, but I couldn't manage to get this done.
 			* This way, at least the Windows users have no problems...
 			*/
-			fileName = "/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/cube.obj";
+			fileName = "/Users/LC/git/ti1805raytracer/CG_Project/torus3.obj";
 		#else
 			//set default model
 			fileName = "cube.obj";//"dodgeColorTest.obj"
@@ -267,9 +268,12 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 	if (Ambient && material->has_Ka()){
 		pixelcolor += material->Ka();
 	}
-	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
-		Vec3Df L = MyLightPositions[i];
-		if (!isShadow(vertexPos, L))
+    for (unsigned int i = 0; i < MyLightPositions.size(); i++){
+        Vec3Df L = MyLightPositions[i];
+        for(int i=0;i<15;i++){
+            Vec3Df offset=Vec3Df((rand() % 2*radius)-radius,(rand()%2*radius)-radius,(rand()%2*radius)-radius);
+        
+		if (!isShadow(vertexPos, L+offset))
 		{
 			if (Diffuse && material->has_Kd()){
 				pixelcolor += diffuseOnly(vertexPos, normal, material, L);
@@ -279,6 +283,8 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 			}
 		}
 	}
+        pixelcolor=pixelcolor/15;
+    }
 	if (Reflection && lvl < max_lvl){
 		Vec3Df offset = Vec3Df(0.001, 0.001, 0.001);
 		pixelcolor += material->Ks() * reflection(ray,(vertexPos+offset), normal, lvl + 1);

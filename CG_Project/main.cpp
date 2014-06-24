@@ -424,7 +424,7 @@ void keyboard(unsigned char key, int x, int y)
 		 * global variable / function, but I couldn't manage to get this done.
 		 * This way, at least the Windows users have no problems...
 		 */
-			result.writeImage("/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/result.ppm");
+			result.writeImage("/Users/LC/git/ti1805raytracer/CG_Project/result.ppm");
 		#else
 			result.writeImage("result.ppm");
 		//	#ifdef WIN32
