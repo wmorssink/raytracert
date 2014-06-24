@@ -434,14 +434,12 @@ bool Mesh::loadMtl(const char * filename, std::map<string, unsigned int> & mater
         else if (strncmp(line, "Tr ", 3)==0 ) // transparency value
         {
             sscanf(line, "Tr %f", &f1);
-			printf("Tr %f\n", &f1);
             mat.set_Tr(f1);
         }
         else if (strncmp(line, "d ", 2)==0 ) // transparency value
         {
             sscanf(line, "d %f", &f1);
-			printf("d %f\n", &f1);
-            mat.set_Tr(f1);
+	        mat.set_Tr(f1);
         }
 
         if (feof( _in ) && indef && mat.is_valid() && !key.empty())

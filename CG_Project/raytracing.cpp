@@ -26,7 +26,8 @@ unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
 #define BLACK Vec3Df(0, 0, 0);
-int max_lvl = 5;
+
+int max_lvl = 5;//max recursive depth
 
 using namespace std;
 
@@ -65,13 +66,19 @@ void init(char* fileName)
 
 	MyMesh.loadMesh(fileName, true);
 	MyMesh.computeVertexNormals();
+
+	//calculate normals for triangles at startup
     calculateNormals();
+	
 	//one first move: initialize the first light source
 	//at least ONE light source has to be in the scene!!!
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
 }
 
+/*
+For each triangle in MyMesh.triangles it calculates the normal and adds it to the normals vector.
+*/
 void calculateNormals(){
     for (int i=0; i<MyMesh.triangles.size();i++){
 		Vec3Df edge01 = MyMesh.vertices[MyMesh.triangles[i].v[1]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
@@ -147,6 +154,11 @@ bool rayIntersectTriangle(const Ray ray, Vec3Df T[], Vec3Df* intersectOut){
 	return true; // I is in T
 }
 
+/*
+ returns true if the triangle intersects in the mesh structure.
+ returns false if no intersect is found.
+ Also writes the intersection point, its normal and the material of the triangle to intersectOut.
+ */
 bool intersect(const Ray &ray, Vec3Df* intersectOut, Vec3Df* normalOut, Material* materialOut) {
     Vec3Df intersect, normal, tempIntersect;
     Material material, tempMaterial;
@@ -188,17 +200,22 @@ bool intersect(const Ray &ray, Vec3Df* intersectOut, Vec3Df* normalOut, Material
     return dist != FLT_MAX;
 }
 
-
+/*
+	Calculates the lambertian shading color.
+*/
 Vec3Df diffuseOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, Vec3Df lightpos){
 	Vec3Df Diffuse = BLACK;
 	normal.normalize();
 	lightpos.normalize();
-		//calculate diffuse color for current light source.
-		Diffuse += material->Kd() * max(Vec3Df::dotProduct(normal, lightpos), 0.0f);
+	//calculate diffuse color for current light source.
+	Diffuse += material->Kd() * max(Vec3Df::dotProduct(normal, lightpos), 0.0f);
 	
 	return Diffuse;
 }
 
+/*
+	Calculates the Blinn-Phong Shading Specularity color.
+*/
 Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, Vec3Df lightpos){
 	Vec3Df Specularity = BLACK;
 	Vec3Df V = MyCameraPosition - vertexPos;//calculate view vector
@@ -223,15 +240,20 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 	return Specularity;
 }
 
+
+/*
+	Determens if a triangle is between a point and a light position.
+	This is used to check if a point is in a shadow.
+	returns true if the point is in shadow.
+	returns false if the point is not in shadow.
+*/
 bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 	Vec3Df intersectOut, normalOut;
     Material materialOut;
 	//adding offset for depth bias
 	intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
-	//checking for intersect between light source and first intersection point
-	if (Shadows){
-		//adding offset for depth bias
-		intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
+    if(Shadows) {
+        //checking for intersect between light source and first intersection point
         if(intersect(Ray(intersection, light_pos), &intersectOut, &normalOut, &materialOut)) {
             if (materialOut.has_Tr() && materialOut.Tr() < 1.0){
 				return false;
@@ -242,7 +264,9 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 	return false;
 }
 
-
+/*
+	Function to add offsets towards the direction of the towardspoint
+*/
 void addOffset(Vec3Df* point, Vec3Df* towardsPoint){
 	Vec3Df vector = (*towardsPoint) - (*point);
 	vector.normalize();
@@ -250,9 +274,13 @@ void addOffset(Vec3Df* point, Vec3Df* towardsPoint){
 	*point += vector;
 }
 
+/*
+	Function to calculate the reflection Vector and then trace it further recursively
+*/
 
 Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
 	ray.normalize();
+	//calculate reflection vector
 	Vec3Df R = ray -(2 * Vec3Df::dotProduct(normal, ray)*normal);
 	Vec3Df point = vertexPos;
 	Vec3Df dest = vertexPos + R;
@@ -260,29 +288,26 @@ Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl
 	return trace(point, dest, lvl);
 }
 
-
-
-//src http://ray-tracer-concept.blogspot.nl/2011/12/refraction.html
+/*
+	Calculate refraction vector and trace it further
+*/
 Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
-	/*Vec3Df point = vertexPos;
-	addOffset(&point, &ray);
-
-	return (1 - material->Tr()) * trace(point, ray, lvl + 1);
-	*/
 	float ni = material->Ni();
 	ray.normalize();
 	float check = Vec3Df::dotProduct(ray, (normal));
+	//check if ray is going inside the material or coming out of it
 	if (check < 0){
 		float angle = acosf(check);
+		//hardcoded reflection angle to simulate some sort of total reflection at a low angle
 		if (angle <= 2 && angle > 0){
 			return material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 		}
-		//printf("im in if\n");
 		float nr = 1 / ni;
 		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(normal, ray), 2));
+		//check if there is not a total internal reflection
 		if (root >= 0.0){
-			//printf("if root\n");
 			root = sqrt(root);
+			//calculate transition Vector
 			Vec3Df T = nr*(ray-Vec3Df::dotProduct(normal, ray)*normal)- normal * root;
 			Vec3Df point = vertexPos;
 			Vec3Df dest = vertexPos + T;
@@ -291,12 +316,12 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 		}
 	}
 	else{
-		//printf("im in else\n");
 		float nr = ni;
 		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct((-normal), ray), 2));
+		//check if there is not a total internal reflection
 		if (root >= 0.0){
-		//	printf("else root\n");
 			root = sqrt(root);
+			//calculate transition Vector
 			Vec3Df T = nr*(ray - Vec3Df::dotProduct((-normal), ray)*(-normal)) - (-normal) * root;
 			Vec3Df point = vertexPos;
 			Vec3Df dest = point + T;
@@ -308,30 +333,38 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 	return Vec3Df(0,0,0);
 }
 
+/*
+	Shading function that returns the resulting color
+*/
 Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
 	Vec3Df pixelcolor = BLACK;
 	if (Ambient && material->has_Ka()){
+		//add ambient color
 		pixelcolor += material->Ka();
 	}
+	//loop for going through all light sources
 	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
 		Vec3Df L = MyLightPositions[i];
+		//check if poin is in shadow
 		if (!isShadow(vertexPos, L))
 		{
             float tr = material->has_Tr() ? material->Tr() : 1;
 			if (Diffuse && material->has_Kd()){
-				pixelcolor += tr * diffuseOnly(vertexPos, normal, material, L);
+				//add diffuse color
+				pixelcolor += material->Tr() * diffuseOnly(vertexPos, normal, material, L);
 			}
 			if (Specular && material->has_Ks() && material->has_Ns()){
-				pixelcolor += tr * blinnPhongSpecularOnly(vertexPos, normal, material, L);
+				//add Specular part
+				pixelcolor += material->Tr() * blinnPhongSpecularOnly(vertexPos, normal, material, L);
 			}
 		}
 	}
-
-	//printf("Tr = %f\n", material->Tr());
 	if (Refraction && (material->Tr()<1) && lvl < max_lvl){
+		//calculate refraction
 		pixelcolor += refraction(ray, vertexPos, normal, material, lvl +1);
 	}
 	else if (Reflection && lvl < max_lvl){
+		//calculate reflection we take Ks() as same aproximate reflection coefficient. So a mirror wpuld have Ks(1,1,1)
 		pixelcolor += material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 	}
 
@@ -340,20 +373,30 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 }
 
 /*
-Returns the Material object corresponding to the triangle with index index.
+	Returns the Material object corresponding to the triangle with index index.
 */
 Material getMaterial(int index){
 	int materialIndex = MyMesh.triangleMaterials[index];
 	return MyMesh.materials[materialIndex];
 }
 
+/*
+	Trace function that is called recursively
+*/
 Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
-	Vec3Df pixelcolor = BLACK;
-	Vec3Df intersectOut, normalOut;
+	Vec3Df pixelcolor = BLACK;	Vec3Df intersectOut, normalOut;
     Material materialOut;
     
+    
+	//check for intersection
     if(intersect(Ray(origin, dest), &intersectOut, &normalOut, &materialOut)) {
         Vec3Df ray = origin - dest;
+        
+        if (DebugMode){
+            o.push_back(origin);
+            d.push_back(intersectOut);
+        }
+        
         pixelcolor = shade(ray, intersectOut, normalOut, &materialOut, lvl);
     }
     
@@ -452,6 +495,7 @@ void yourKeyboardFunc(char key, int x, int y){
 
 				int i = intersect(Ray(origin, dest), &intersectOut, &normalOut, &materialOut);
 
+				//add origin and intersection to vectors
 				o.push_back(origin);
 				d.push_back(intersectOut);
 
@@ -470,6 +514,7 @@ void yourKeyboardFunc(char key, int x, int y){
 			return;
 
 		case 'w':
+			//Sets the openGl fill mode to lines.
 			WireFrame = !WireFrame;
 			if (WireFrame){
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -504,4 +549,3 @@ void yourKeyboardFunc(char key, int x, int y){
 
 	cout << " pressed! The mouse was in location " << x << "," << y << "!" << std::endl;
 }
-
