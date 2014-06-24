@@ -340,7 +340,7 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 		pixelcolor += refraction(ray, vertexPos, normal, material, lvl +1);
 	}
 	else if (Reflection && lvl < max_lvl){
-		//calculate reflection
+		//calculate reflection we take Ks() as same aproximate reflection coefficient. So a mirror wpuld have Ks(1,1,1)
 		pixelcolor += material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 	}
 
