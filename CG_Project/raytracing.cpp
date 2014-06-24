@@ -20,13 +20,13 @@ bool Specular = true;
 bool Refraction = true;
 bool WireFrame = false;
 
-#define pixelfactor 1	//use 3 for good looking, 1 for fast performance
+#define pixelfactor 3	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
 #define BLACK Vec3Df(0, 0, 0);
 
-int max_lvl = 5;//max recursive depth
+int max_lvl = 10;//max recursive depth
 
 using namespace std;
 
