@@ -152,15 +152,27 @@ class Sphere {
     Material material;
     
     Sphere() {
-        center = Vec3Df(0,0,0);
-        radius = 0.5f;
+        center = Vec3Df(0.0f, 0.0f, 0.0f);
+        radius = 1.0f;
         
         material = Material();
-        material.set_Kd(0.2, 0.2, 0.2);
-        material.set_Ks(0.7, 0.7, 0.7);
-        material.set_Ka(0.1, 0.1, 0.1);
-        material.set_Ns(1.0);
-        material.set_Ni(1.0);
+        material.set_Kd(0.8, 0.8, 0.8);
+        material.set_Ks(0.2, 0.2, 0.2);
+        material.set_Ka(0.0, 0.0, 0.0);
+        material.set_Ns(1);
+        material.set_Ni(1);
+    }
+    
+    Sphere(const Vec3Df &_origin, float _radius) {
+        center = _origin; radius = _radius;
+        
+        
+        material = Material();
+        material.set_Kd(0.8, 0.8, 0.8);
+        material.set_Ks(0.2, 0.2, 0.2);
+        material.set_Ka(0.0, 0.0, 0.0);
+        material.set_Ns(1);
+        material.set_Ni(1);
     }
     
     Sphere(const Vec3Df &_origin, float _radius, const Material &_material) {
@@ -168,14 +180,24 @@ class Sphere {
     }
     
     inline bool intersect(const Vec3Df &origin, const Vec3Df &destination, Vec3Df* intersection) {
-        Vec3Df direction = origin - destination;
-        Vec3Df op = center - origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
-        float eps=1e-4, b = Vec3Df::dotProduct(op, destination), det = b*b - Vec3Df::dotProduct(op, op) + radius * radius;
-        if (det<0) return false; else det=sqrt(det);
-        float t = (t=b-det)>eps ? t : ((t=b+det)>eps ? t : 0);
-        Vec3Df I = origin + t * direction;
-        memcpy(intersection, &I, sizeof(Vec3Df));
-        return true;
+        Vec3Df direction = origin -     destination;
+        Vec3Df op = origin - center; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
+     
+        float eps=1e-4;
+        float b = 2 * Vec3Df::dotProduct(op, direction);
+        float a = Vec3Df::dotProduct(direction, direction);
+        float c = Vec3Df::dotProduct(op, op) - (radius * radius);
+        float disc = b*b - 4*a*c;
+        
+        if ( disc <  0 ) {
+            return false;
+        } else {
+            disc = sqrt(disc);
+            float t = (t=-b-disc)>eps ? t : ((t=-b+disc)>eps ? t : 0);
+            Vec3Df I = destination + t * direction;
+            memcpy(intersection, &I, sizeof(Vec3Df));
+            return true;
+        }
     }
     
 };
