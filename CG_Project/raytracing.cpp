@@ -21,12 +21,12 @@ bool Specular = true;
 bool Refraction = true;
 bool WireFrame = false;
 
-#define pixelfactor 3	//use 3 for good looking, 1 for fast performance
+#define pixelfactor 2	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
 #define BLACK Vec3Df(0, 0, 0);
-int max_lvl = 25;
+int max_lvl = 5;
 
 using namespace std;
 
@@ -56,7 +56,7 @@ void init(char* fileName)
 			* global variable / function, but I couldn't manage to get this done.
 			* This way, at least the Windows users have no problems...
 			*/
-			fileName = "/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/cube.obj";
+			fileName = "/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/scene_3.obj";
 		#else
 			//set default model
 			fileName = "cube.obj";//"dodgeColorTest.obj"
@@ -229,7 +229,17 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 	//adding offset for depth bias
 	intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
 	//checking for intersect between light source and first intersection point
-    return Shadows && intersect(Ray(intersection, light_pos), &intersectOut, &normalOut, &materialOut) && !(materialOut.has_Tr() && materialOut.Tr() < 1);
+	if (Shadows){
+		//adding offset for depth bias
+		intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
+        if(intersect(Ray(intersection, light_pos), &intersectOut, &normalOut, &materialOut)) {
+            if (materialOut.has_Tr() && materialOut.Tr() < 1.0){
+				return false;
+			}
+            return true;
+        }
+	}
+	return false;
 }
 
 
