@@ -227,20 +227,10 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 		//adding offset for depth bias
 		intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
 		int index = intersectMesh(intersection, light_pos, &intersectOut2);
-		//Material material = getMaterial(index);
 		if (index == -1){
-			//printf("no shadow biatch");
 			return false;
 		}
-		//else if (index != -1){
-		//Material material = getMaterial(index);
-		//if (material.has_Tr() && material.Tr() < 1.0){
-		//printf("shadow biatch");
-		//return false;
-		//}
-
 		else {
-			//	printf("shadow biatch");
 			Material material = getMaterial(index);
 			if (material.has_Tr() && material.Tr() < 1.0){
 				return false;
@@ -251,7 +241,9 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 	return false;
 }
 
-
+/*
+	Function to add offsets towards the direction of the towardspoint
+*/
 void addOffset(Vec3Df* point, Vec3Df* towardsPoint){
 	Vec3Df vector = (*towardsPoint) - (*point);
 	vector.normalize();
@@ -259,9 +251,13 @@ void addOffset(Vec3Df* point, Vec3Df* towardsPoint){
 	*point += vector;
 }
 
+/*
+	Function to calculate the reflection Vector and then trace it further recursively
+*/
 
 Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
 	ray.normalize();
+	//calculate reflection vector
 	Vec3Df R = ray -(2 * Vec3Df::dotProduct(normal, ray)*normal);
 	Vec3Df point = vertexPos;
 	Vec3Df dest = vertexPos + R;
@@ -271,27 +267,24 @@ Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl
 
 
 
-//src http://ray-tracer-concept.blogspot.nl/2011/12/refraction.html
-Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
-	/*Vec3Df point = vertexPos;
-	addOffset(&point, &ray);
 
-	return (1 - material->Tr()) * trace(point, ray, lvl + 1);
-	*/
+Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
 	float ni = material->Ni();
 	ray.normalize();
 	float check = Vec3Df::dotProduct(ray, (normal));
+	//check if ray is going inside the material or coming out of it
 	if (check < 0){
 		float angle = acosf(check);
+		//hardcoded reflection angle to simulate some sort of total reflection at a low angle
 		if (angle <= 2 && angle > 0){
 			return material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 		}
-		//printf("im in if\n");
 		float nr = 1 / ni;
 		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(normal, ray), 2));
+		//check if there is not a total internal reflection
 		if (root >= 0.0){
-			//printf("if root\n");
 			root = sqrt(root);
+			//calculate transition Vector
 			Vec3Df T = nr*(ray-Vec3Df::dotProduct(normal, ray)*normal)- normal * root;
 			Vec3Df point = vertexPos;
 			Vec3Df dest = vertexPos + T;
@@ -300,12 +293,12 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 		}
 	}
 	else{
-		//printf("im in else\n");
 		float nr = ni;
 		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct((-normal), ray), 2));
+		//check if there is not a total internal reflection
 		if (root >= 0.0){
-		//	printf("else root\n");
 			root = sqrt(root);
+			//calculate transition Vector
 			Vec3Df T = nr*(ray - Vec3Df::dotProduct((-normal), ray)*(-normal)) - (-normal) * root;
 			Vec3Df point = vertexPos;
 			Vec3Df dest = point + T;
@@ -317,29 +310,37 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 	return Vec3Df(0,0,0);
 }
 
+/*
+	Shading function that returns the resulting color
+*/
 Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
 	Vec3Df pixelcolor = BLACK;
 	if (Ambient && material->has_Ka()){
+		//add ambient color
 		pixelcolor += material->Ka();
 	}
+	//loop for going through all light sources
 	for (unsigned int i = 0; i < MyLightPositions.size(); i++){
 		Vec3Df L = MyLightPositions[i];
+		//check if poin is in shadow
 		if (!isShadow(vertexPos, L))
 		{
 			if (Diffuse && material->has_Kd()){
+				//add diffuse color
 				pixelcolor += material->Tr() * diffuseOnly(vertexPos, normal, material, L);
 			}
 			if (Specular && material->has_Ks() && material->has_Ns()){
+				//add Specular part
 				pixelcolor += material->Tr() * blinnPhongSpecularOnly(vertexPos, normal, material, L);
 			}
 		}
 	}
-
-	//printf("Tr = %f\n", material->Tr());
 	if (Refraction && (material->Tr()<1) && lvl < max_lvl){
+		//calculate refraction
 		pixelcolor += refraction(ray, vertexPos, normal, material, lvl +1);
 	}
 	else if (Reflection && lvl < max_lvl){
+		//calculate reflection
 		pixelcolor += material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 	}
 
@@ -355,11 +356,15 @@ Material getMaterial(int index){
 	return MyMesh.materials[materialIndex];
 }
 
+/*
+	Trace function that is called recursively
+*/
 Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
 
 	Vec3Df pixelcolor = BLACK;
 	
 	Vec3Df intersectOut;
+	//check for intersection
 	int index = intersectMesh(origin, dest, &intersectOut);
 
 	if (index == -1){//no intersection with triangle.
@@ -368,6 +373,7 @@ Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
     
 	Vec3Df ray = dest - origin;
 	Vec3Df normal = normals[index];
+	//get material of intersected triangle
 	Material material = getMaterial(index);
 
 	if (DebugMode){
@@ -683,45 +689,3 @@ Vec3Df boxIntersectTest(Vec3Df ray[], float x, float y, float z, float w, float 
 	}
 	return Vec3Df(0, 1, 0);
 }
-/*
-box makekdtree(){
-	// making a list of all the triangles for the box method
-	std::vector<element> list;
-	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++) {
-		Triangle ctriangle = MyMesh.triangles[i];
-		element e = new element(ctriangle,i);
-		list.push_back(e);
-	}
-
-	float l [3];
-	float h [3];
-
-	for (unsigned int i = 0;i < 3; i++){
-		l[i] = std::numeric_limits<float>::max();
-		h[i] = std::numeric_limits<float>::min();
-	}
-
-	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++) {
-		Vec3Df current = MyMesh.triangles.at(i);
-		for (unsigned int j = 0; i < 3; i++) {
-			if (l[i] < current.p[i])
-				l[i] = current.p[i];
-			if (h[i] > current.p[i])
-				h[i] = current.p[i];
-		}
-	}
-
-	Vec3Df temp = new Vec3Df(l[0],l[1],l[2]);
-
-	return new Box(temp, h, list, 1);
-}
-
-bool kdtree(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut, int* ind) {
-
-	Vec3Df intersect; //intersection point of closest triangle
-	int index = -1;	  //index of closest triangle
-	float dist = FLT_MAX;
-
-	Vec3Df R[] = { origin, dest };
-	return globalbox.intersect(R, intersectOut, ind);
-}*/
