@@ -221,13 +221,17 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 }
 
 bool isShadow(Vec3Df intersection, Vec3Df light_pos){
-	Vec3Df intersectOut2;
-	//adding offset for depth bias
-	intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
 	//checking for intersect between light source and first intersection point
-	int index = intersectMesh(intersection, light_pos, &intersectOut2);
 	if (Shadows){
+		Vec3Df intersectOut2;
+		//adding offset for depth bias
+		intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
+		int index = intersectMesh(intersection, light_pos, &intersectOut2);
+		Material material = getMaterial(index);
 		if (index == -1){
+			return false;
+		}
+		else if (material.has_Tr() && material.Tr() < 1){
 			return false;
 		}
 		else {
@@ -240,8 +244,6 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 
 void addOffset(Vec3Df* point, Vec3Df* towardsPoint){
 	Vec3Df vector = (*towardsPoint) - (*point);
-	char buff[128];
-	//cout << "addoffset" <<  vector.toString(buff, 128) << endl;
 	vector.normalize();
 	vector *= 0.01;
 	*point += vector;
@@ -266,18 +268,21 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 
 	return (1 - material->Tr()) * trace(point, ray, lvl + 1);
 	*/
-
 	float ni = material->Ni();
 	ray.normalize();
-	float check = Vec3Df::dotProduct(ray, normal);
+	float check = Vec3Df::dotProduct(ray, (normal));
 	if (check < 0){
-		printf("im in if\n");
+		float angle = acosf(check);
+		if (angle <= 2 && angle > 0){
+			return material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
+		}
+		//printf("im in if\n");
 		float nr = 1 / ni;
 		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(normal, ray), 2));
 		if (root >= 0.0){
-			printf("if root\n");
+			//printf("if root\n");
 			root = sqrt(root);
-			Vec3Df T = (nr*Vec3Df::dotProduct(normal, ray) - root)*(normal) - nr*ray;
+			Vec3Df T = nr*(ray-Vec3Df::dotProduct(normal, ray)*normal)- normal * root;
 			Vec3Df point = vertexPos;
 			Vec3Df dest = vertexPos + T;
 			addOffset(&point, &dest);
@@ -285,13 +290,13 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 		}
 	}
 	else{
-		printf("im in else\n");
+		//printf("im in else\n");
 		float nr = ni;
 		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct((-normal), ray), 2));
 		if (root >= 0.0){
-			printf("else root\n");
+		//	printf("else root\n");
 			root = sqrt(root);
-			Vec3Df T = (nr*Vec3Df::dotProduct((-normal), ray) - root)*(-normal) - nr*ray;
+			Vec3Df T = nr*(ray - Vec3Df::dotProduct((-normal), ray)*(-normal)) - (-normal) * root;
 			Vec3Df point = vertexPos;
 			Vec3Df dest = point + T;
 			addOffset(&point, &dest);
@@ -299,7 +304,6 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 			
 		}
 	}
-	printf("total reflection");
 	return Vec3Df(0,0,0);
 }
 
@@ -320,12 +324,13 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 			}
 		}
 	}
-	if (Reflection && lvl < max_lvl){
-		pixelcolor += material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
-	}
+
 	//printf("Tr = %f\n", material->Tr());
 	if (Refraction && (material->Tr()<1) && lvl < max_lvl){
 		pixelcolor += refraction(ray, vertexPos, normal, material, lvl +1);
+	}
+	else if (Reflection && lvl < max_lvl){
+		pixelcolor += material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 	}
 
 	return pixelcolor;
