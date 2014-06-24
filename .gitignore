@@ -19,5 +19,19 @@
 *.out
 *.app
 
+# OS generated files #
+######################
+*/.DS_Store
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
 # XCode project
+/CG_Project.xcodeproj
+CG_Project.xcodeproj
 CG_Project.xcodeproj/
