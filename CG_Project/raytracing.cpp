@@ -21,7 +21,7 @@ bool Specular = true;
 bool Refraction = true;
 bool WireFrame = false;
 
-#define pixelfactor 1	//use 3 for good looking, 1 for fast performance
+#define pixelfactor 3	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
@@ -31,6 +31,7 @@ int max_lvl = 25;
 using namespace std;
 
 vector<Vec3Df> normals;
+Sphere spheres[] = { /* new Sphere() */ };
 
 //temporary variables
 Vec3Df testRayOrigin;
@@ -146,8 +147,6 @@ bool rayIntersectTriangle(const Ray ray, Vec3Df T[], Vec3Df* intersectOut){
 	return true; // I is in T
 }
 
-Sphere spheres[] = { Sphere(), Sphere(Vec3Df(-1,-1,-1), .5) };
-
 bool intersect(const Ray &ray, Vec3Df* intersectOut, Vec3Df* normalOut, Material* materialOut) {
     Vec3Df intersect, normal, tempIntersect;
     Material material, tempMaterial;
@@ -169,7 +168,7 @@ bool intersect(const Ray &ray, Vec3Df* intersectOut, Vec3Df* normalOut, Material
 		}
     }
     
-    for(unsigned int i = 0, s = 2; i < s; i++) {
+    for(unsigned int i = 0, s = sizeof(spheres) / sizeof(Sphere); i < s; i++) {
         Sphere sphere = spheres[i];
         if(sphere.intersect(ray, &tempIntersect)) {
 			//ray intersects with the current triangle
