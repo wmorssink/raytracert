@@ -25,7 +25,8 @@ unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
 #define BLACK Vec3Df(0, 0, 0);
-int max_lvl = 5;
+
+int max_lvl = 5;//max recursive depth
 
 using namespace std;
 
@@ -36,7 +37,6 @@ vector<Vec3Df> o, d;
 bool DebugMode = false;
 //////////
 
-int teller=0;
 
 //use this function for any preprocessing of the mesh.
 void init(char* fileName)
@@ -62,13 +62,19 @@ void init(char* fileName)
 
 	MyMesh.loadMesh(fileName, true);
 	MyMesh.computeVertexNormals();
+
+	//calculate normals for triangles at startup
     calculateNormals();
+	
 	//one first move: initialize the first light source
 	//at least ONE light source has to be in the scene!!!
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
 }
 
+/*
+For each triangle in MyMesh.triangles it calculates the normal and adds it to the normals vector.
+*/
 void calculateNormals(){
     for (int i=0; i<MyMesh.triangles.size();i++){
 		Vec3Df edge01 = MyMesh.vertices[MyMesh.triangles[i].v[1]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
@@ -148,9 +154,9 @@ bool rayIntersectTriangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut){
 }
 
 /*
-returns the index of the triangle of the intersection in the mesh structure.
-returns -1 if no intersect is found.
-Also writes the intersection point of the triangle to intersectOut.
+	returns the index of the triangle of the intersection in the mesh structure.
+	returns -1 if no intersect is found.
+	Also writes the intersection point of the triangle to intersectOut.
 */
 int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 	Vec3Df intersect; //intersection point of closest triangle
@@ -185,17 +191,22 @@ int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 	return index;
 }
 
-
+/*
+	Calculates the lambertian shading color.
+*/
 Vec3Df diffuseOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, Vec3Df lightpos){
 	Vec3Df Diffuse = BLACK;
 	normal.normalize();
 	lightpos.normalize();
-		//calculate diffuse color for current light source.
-		Diffuse += material->Kd() * max(Vec3Df::dotProduct(normal, lightpos), 0.0f);
+	//calculate diffuse color for current light source.
+	Diffuse += material->Kd() * max(Vec3Df::dotProduct(normal, lightpos), 0.0f);
 	
 	return Diffuse;
 }
 
+/*
+	Calculates the Blinn-Phong Shading Specularity color.
+*/
 Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Material* material, Vec3Df lightpos){
 	Vec3Df Specularity = BLACK;
 	Vec3Df V = MyCameraPosition - vertexPos;//calculate view vector
@@ -220,20 +231,28 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 	return Specularity;
 }
 
+
+/*
+	Determens if a triangle is between a point and a light position.
+	This is used to check if a point is in a shadow.
+	returns true if the point is in shadow.
+	returns false if the point is not in shadow.
+*/
 bool isShadow(Vec3Df intersection, Vec3Df light_pos){
-	//checking for intersect between light source and first intersection point
+	
 	if (Shadows){
 		Vec3Df intersectOut2;
 		//adding offset for depth bias
 		intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
+		//checking for intersect between light source and first intersection point
 		int index = intersectMesh(intersection, light_pos, &intersectOut2);
 		if (index == -1){
-			return false;
+			return false;//no intersection found.
 		}
 		else {
 			Material material = getMaterial(index);
 			if (material.has_Tr() && material.Tr() < 1.0){
-				return false;
+				return false;//material is transparrent, no shadow.
 			}
 			return true;
 		}
@@ -349,7 +368,7 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 }
 
 /*
-Returns the Material object corresponding to the triangle with index index.
+	Returns the Material object corresponding to the triangle with index index.
 */
 Material getMaterial(int index){
 	int materialIndex = MyMesh.triangleMaterials[index];
@@ -394,12 +413,6 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 	int lvl = 0;
 	pixelcolor = trace(origin, dest, lvl);
 	return pixelcolor;
-}
-
-
-
-int getTeller(){
-    return teller;
 }
 
 
@@ -484,6 +497,7 @@ void yourKeyboardFunc(char key, int x, int y){
 
 				int i = intersectMesh(origin, dest, &intersectOut);
 
+				//add origin and intersection to vectors
 				o.push_back(origin);
 				d.push_back(intersectOut);
 
@@ -502,6 +516,7 @@ void yourKeyboardFunc(char key, int x, int y){
 			return;
 
 		case 'w':
+			//Sets the openGl fill mode to lines.
 			WireFrame = !WireFrame;
 			if (WireFrame){
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
