@@ -25,7 +25,7 @@ unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
 #define BLACK Vec3Df(0, 0, 0);
-int max_lvl = 25;
+int max_lvl = 5;
 
 using namespace std;
 
@@ -227,14 +227,24 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 		//adding offset for depth bias
 		intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
 		int index = intersectMesh(intersection, light_pos, &intersectOut2);
-		Material material = getMaterial(index);
+		//Material material = getMaterial(index);
 		if (index == -1){
+			//printf("no shadow biatch");
 			return false;
 		}
-		else if (material.has_Tr() && material.Tr() < 1){
-			return false;
-		}
+		//else if (index != -1){
+		//Material material = getMaterial(index);
+		//if (material.has_Tr() && material.Tr() < 1.0){
+		//printf("shadow biatch");
+		//return false;
+		//}
+
 		else {
+			//	printf("shadow biatch");
+			Material material = getMaterial(index);
+			if (material.has_Tr() && material.Tr() < 1.0){
+				return false;
+			}
 			return true;
 		}
 	}
