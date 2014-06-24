@@ -11,7 +11,7 @@
 #include <GL/glut.h>
 #endif
 #include "raytracing.h"
-#include "plane.h"
+#include "sphere.h"
 
 bool Ambient = true;
 bool Diffuse = true;

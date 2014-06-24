@@ -1,57 +1,75 @@
 //
-//  Sphere.h
+//  sphere.h
 //  CG_Project
 //
-//  Created by Jan-Willem Gmelig Meyling on 19/06/14.
+//  Created by Jan-Willem Gmelig Meyling on 24/06/14.
 //  Copyright (c) 2014 TU Delft. All rights reserved.
 //
 
-#ifndef CG_Project_Sphere_h
-#define CG_Project_Sphere_h
+#ifndef CG_Project_sphere_h
+#define CG_Project_sphere_h
+
 #include "Vec3D.h"
-#include <math.h> 
+#include "mesh.h"
+#include "ray.h"
 
 class Sphere {
+    
+public:
+    
     Vec3Df center;
     float radius;
     Material material;
     
-    public :
-    
-    inline Sphere () {
-        center = Vec3Df(0,0,0);
-        radius = 1;
-        material = Material();
-    }
-    
-    inline Sphere (Vec3Df _center, float _radius, Material _material) {
-        center = _center;
-        radius = _radius;
-        material = _material;
-    }
-    
-    virtual Vec3Df getNormalAt(Vec3Df& intersection) {
-        Vec3Df result = intersection - center;
-        result.normalize();
-        return result;
-    }
-    
-    virtual float findIntersection(Vec3Df& origin, Vec3Df& destination) {
-        Vec3Df ray = center - origin;
-        double eps = 1e-4;
-        double dot = Vec3Df::dotProduct(ray, destination);
-        double det = dot * dot - Vec3Df::dotProduct(center, center) + radius * radius;
+    Sphere() {
+        center = Vec3Df(0.0f, 0.0f, 0.0f);
+        radius = 1.0f;
         
-        if ( det < 0 ) {
-            return 0;
-        }
-        else {
-            double t;
-            return (t=dot-det)>eps ? t : ((t=dot+det)>eps ? t : 0);
-
+        material = Material();
+        material.set_Kd(0.8, 0.8, 0.8);
+        material.set_Ks(0.2, 0.2, 0.2);
+        material.set_Ka(0.0, 0.0, 0.0);
+        material.set_Ns(1);
+        material.set_Ni(1);
+    }
+    
+    Sphere(const Vec3Df &_origin, float _radius) {
+        center = _origin; radius = _radius;
+        
+        
+        material = Material();
+        material.set_Kd(0.8, 0.8, 0.8);
+        material.set_Ks(0.2, 0.2, 0.2);
+        material.set_Ka(0.0, 0.0, 0.0);
+        material.set_Ns(1);
+        material.set_Ni(1);
+    }
+    
+    Sphere(const Vec3Df &_origin, float _radius, const Material &_material) {
+        center = _origin; radius = _radius; material = _material;
+    }
+    
+    inline bool intersect(const Ray &ray, Vec3Df* intersection) {
+        Vec3Df direction = ray.origin - ray.destination;
+        Vec3Df op = ray.origin - center; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
+        
+        float eps=1e-4;
+        float b = 2 * Vec3Df::dotProduct(op, direction);
+        float a = Vec3Df::dotProduct(direction, direction);
+        float c = Vec3Df::dotProduct(op, op) - (radius * radius);
+        float disc = b*b - 4*a*c;
+        
+        if ( disc <  0 ) {
+            return false;
+        } else {
+            disc = sqrt(disc);
+            float t = (t=-b-disc)>eps ? t : ((t=-b+disc)>eps ? t : 0);
+            Vec3Df I = ray.destination + t * direction;
+            memcpy(intersection, &I, sizeof(Vec3Df));
+            return true;
         }
     }
     
-}
+};
 
 #endif

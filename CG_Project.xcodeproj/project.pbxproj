@@ -49,6 +49,10 @@
 		492E7BA4194A4BFC0001CB08 /* Vec3D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vec3D.h; sourceTree = "<group>"; };
 		492E7BA5194A4BFC0001CB08 /* Vertex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vertex.h; sourceTree = "<group>"; };
 		494B960119589E91008549E3 /* plane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = plane.h; sourceTree = "<group>"; };
+		494B960219599B26008549E3 /* ray.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ray.h; sourceTree = "<group>"; };
+		494B960319599B38008549E3 /* rectangle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rectangle.h; sourceTree = "<group>"; };
+		494B960419599B98008549E3 /* box.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = box.h; sourceTree = "<group>"; };
+		494B960519599BC6008549E3 /* sphere.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sphere.h; sourceTree = "<group>"; };
 		497E4A111952E56D00767C7D /* sphere.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = sphere.bmp; sourceTree = "<group>"; };
 		497E4A121952E56D00767C7D /* sphere.mtl */ = {isa = PBXFileReference; lastKnownFileType = text; path = sphere.mtl; sourceTree = "<group>"; };
 		497E4A131952E56D00767C7D /* sphere.obj */ = {isa = PBXFileReference; lastKnownFileType = text; path = sphere.obj; sourceTree = "<group>"; };
@@ -109,6 +113,10 @@
 				492E7B8C194A4B7B0001CB08 /* CG_Project.1 */,
 				494B960119589E91008549E3 /* plane.h */,
 				492E7B88194A4B7B0001CB08 /* Products */,
+				494B960219599B26008549E3 /* ray.h */,
+				494B960319599B38008549E3 /* rectangle.h */,
+				494B960419599B98008549E3 /* box.h */,
+				494B960519599BC6008549E3 /* sphere.h */,
 			);
 			path = CG_Project;
 			sourceTree = "<group>";
