@@ -18,21 +18,24 @@ bool Reflection = true;
 bool Shadows = true;
 bool Specular = true;
 bool Refraction = true;
+bool WireFrame = false;
 
 #define pixelfactor 1	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
 #define BLACK Vec3Df(0, 0, 0);
-int max_lvl = 4;
+int max_lvl = 25;
 
 using namespace std;
 
 vector<Vec3Df> normals;
 
-//temporary variables
-Vec3Df testRayOrigin;
-Vec3Df testRayDestination;
+//for ray debugging
+vector<Vec3Df> o, d;
+bool DebugMode = false;
+//////////
+
 int teller=0;
 
 //use this function for any preprocessing of the mesh.
@@ -42,7 +45,7 @@ void init(char* fileName)
 	//feel free to replace cube by a path to another model
 	//please realize that not all OBJ files will successfully load.
 	//Nonetheless, if they come from Blender, they should.
-    
+	
 	if (fileName == NULL){
 		#ifdef __APPLE__
 			/*
@@ -71,6 +74,7 @@ void calculateNormals(){
 		Vec3Df edge01 = MyMesh.vertices[MyMesh.triangles[i].v[1]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
 		Vec3Df edge02 = MyMesh.vertices[MyMesh.triangles[i].v[2]].p - MyMesh.vertices[MyMesh.triangles[i].v[0]].p;
 		Vec3Df normal = Vec3Df::crossProduct(edge01, edge02);
+		normal.normalize();
 		normals.push_back(normal);
     }
 }
@@ -152,7 +156,14 @@ int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 	Vec3Df intersect; //intersection point of closest triangle
 	int index = -1;	  //index of closest triangle
 	float dist = FLT_MAX;
+	int* ind;
 
+	/*
+	if(kdtree(origin, dest, intersectOut, ind)){
+		intersect = intersectOut;
+		index = ind;
+	}
+	*/
 	Vec3Df R[] = { origin, dest };
 	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++){
 		Vec3Df tempIntersect;
@@ -210,13 +221,17 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 }
 
 bool isShadow(Vec3Df intersection, Vec3Df light_pos){
-	Vec3Df intersectOut2;
-	//adding offset for depth bias
-	intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
 	//checking for intersect between light source and first intersection point
-	int index = intersectMesh(intersection, light_pos, &intersectOut2);
 	if (Shadows){
+		Vec3Df intersectOut2;
+		//adding offset for depth bias
+		intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
+		int index = intersectMesh(intersection, light_pos, &intersectOut2);
+		Material material = getMaterial(index);
 		if (index == -1){
+			return false;
+		}
+		else if (material.has_Tr() && material.Tr() < 1){
 			return false;
 		}
 		else {
@@ -226,43 +241,73 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 	return false;
 }
 
-Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
-	Vec3Df R = 2 * Vec3Df::dotProduct(normal, ray)*normal;
-	return trace(vertexPos, R, lvl);
+
+void addOffset(Vec3Df* point, Vec3Df* towardsPoint){
+	Vec3Df vector = (*towardsPoint) - (*point);
+	vector.normalize();
+	vector *= 0.01;
+	*point += vector;
 }
+
+
+Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
+	ray.normalize();
+	Vec3Df R = ray -(2 * Vec3Df::dotProduct(normal, ray)*normal);
+	Vec3Df point = vertexPos;
+	Vec3Df dest = vertexPos + R;
+	addOffset(&point, &dest);
+	return trace(point, dest, lvl);
+}
+
 
 
 //src http://ray-tracer-concept.blogspot.nl/2011/12/refraction.html
 Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
+	/*Vec3Df point = vertexPos;
+	addOffset(&point, &ray);
 
+	return (1 - material->Tr()) * trace(point, ray, lvl + 1);
+	*/
 	float ni = material->Ni();
-	float check = Vec3Df::dotProduct(ray, normal);
+	ray.normalize();
+	float check = Vec3Df::dotProduct(ray, (normal));
 	if (check < 0){
+		float angle = acosf(check);
+		if (angle <= 2 && angle > 0){
+			return material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
+		}
+		//printf("im in if\n");
 		float nr = 1 / ni;
 		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(normal, ray), 2));
 		if (root >= 0.0){
+			//printf("if root\n");
 			root = sqrt(root);
-			Vec3Df T = (nr*Vec3Df::dotProduct(normal, ray) - root)*normal - nr*ray;
+			Vec3Df T = nr*(ray-Vec3Df::dotProduct(normal, ray)*normal)- normal * root;
+			Vec3Df point = vertexPos;
 			Vec3Df dest = vertexPos + T;
-			return material->Tr() * trace(vertexPos, dest, lvl);
+			addOffset(&point, &dest);
+			return (1-material->Tr()) * trace(point, dest, lvl+1);
 		}
 	}
 	else{
+		//printf("im in else\n");
 		float nr = ni;
-		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(-normal, ray), 2));
+		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct((-normal), ray), 2));
 		if (root >= 0.0){
+		//	printf("else root\n");
 			root = sqrt(root);
-			Vec3Df T = (nr*Vec3Df::dotProduct((-normal), ray) - root)*(-normal) - nr*ray;
-			Vec3Df dest = vertexPos + T;
-			return material->Tr() * trace(vertexPos, dest, lvl);
+			Vec3Df T = nr*(ray - Vec3Df::dotProduct((-normal), ray)*(-normal)) - (-normal) * root;
+			Vec3Df point = vertexPos;
+			Vec3Df dest = point + T;
+			addOffset(&point, &dest);
+			return (1 - material->Tr()) * trace(point, dest, lvl + 1);
+			
 		}
 	}
-	//Vec3Df R = 2 * Vec3Df::dotProduct(normal, V)*normal;
 	return Vec3Df(0,0,0);
 }
 
 Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
-
 	Vec3Df pixelcolor = BLACK;
 	if (Ambient && material->has_Ka()){
 		pixelcolor += material->Ka();
@@ -272,20 +317,20 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 		if (!isShadow(vertexPos, L))
 		{
 			if (Diffuse && material->has_Kd()){
-				pixelcolor += diffuseOnly(vertexPos, normal, material, L);
+				pixelcolor += material->Tr() * diffuseOnly(vertexPos, normal, material, L);
 			}
 			if (Specular && material->has_Ks() && material->has_Ns()){
-				pixelcolor += blinnPhongSpecularOnly(vertexPos, normal, material, L);
+				pixelcolor += material->Tr() * blinnPhongSpecularOnly(vertexPos, normal, material, L);
 			}
 		}
 	}
-	if (Reflection && lvl < max_lvl){
-		Vec3Df offset = Vec3Df(0.001, 0.001, 0.001);
-		pixelcolor += material->Ks() * reflection(ray,(vertexPos+offset), normal, lvl + 1);
-	}
+
+	//printf("Tr = %f\n", material->Tr());
 	if (Refraction && (material->Tr()<1) && lvl < max_lvl){
-		Vec3Df offset = Vec3Df(0.001, 0.001, 0.001);
-		pixelcolor += refraction(ray, (vertexPos+offset), normal, material, lvl +1);
+		pixelcolor += refraction(ray, vertexPos, normal, material, lvl +1);
+	}
+	else if (Reflection && lvl < max_lvl){
+		pixelcolor += material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 	}
 
 	return pixelcolor;
@@ -311,9 +356,14 @@ Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
 		return pixelcolor;
 	}
     
-	Vec3Df ray = origin - dest;
+	Vec3Df ray = dest - origin;
 	Vec3Df normal = normals[index];
 	Material material = getMaterial(index);
+
+	if (DebugMode){
+		o.push_back(origin);
+		d.push_back(intersectOut);
+	}
 	pixelcolor = shade(ray, intersectOut, normal, &material, lvl);
 
 	return pixelcolor;
@@ -337,7 +387,20 @@ int getTeller(){
 }
 
 
-
+/*
+Draws the lines representing a light ray
+*/
+void drawRayDebugger(){
+	glColor3f(1, 0, 0);
+	glBegin(GL_LINES);
+	for (int i = 0; i < o.size(); i++){
+		glColor3f(1, 0, 0);
+		glVertex3f(o[i][0], o[i][1], o[i][2]);
+		glColor3f(0, 1, 0);
+		glVertex3f(d[i][0], d[i][1], d[i][2]);
+	}
+	glEnd();
+}
 
 void yourDebugDraw()
 {
@@ -347,14 +410,12 @@ void yourDebugDraw()
 	//as an example: 
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glDisable(GL_LIGHTING);
-	glColor3f(0,1,1);
-	glBegin(GL_LINES);
-	glVertex3f(testRayOrigin[0], testRayOrigin[1], testRayOrigin[2]);
-	glVertex3f(testRayDestination[0], testRayDestination[1], testRayDestination[2]);
-	glEnd();
+
+	drawRayDebugger();
+
 	glPointSize(10);
 	glBegin(GL_POINTS);
-	glVertex3fv(MyLightPositions[0].pointer());
+		glVertex3fv(MyLightPositions[0].pointer());
 	glEnd();
 	glPopAttrib();
 
@@ -395,26 +456,69 @@ void yourKeyboardFunc(char key, int x, int y){
 			if (pixelfactorY < 1)
 				pixelfactorY = 1;
 			break;
-    }
-	
+		case '0':
+			DebugMode = !DebugMode;
+			cout << "Debug Mode:\n 0 to enable / disable debug mode\n d to shoot & draw a ray trace.\n c to clear ray trace history.\n";
+			break;
+
+		case 'd': //Shoot ray to mouse position
+			if (DebugMode){
+				Vec3Df origin, dest, intersectOut;
+				produceRay(x, y, origin, dest);
+
+				int i = intersectMesh(origin, dest, &intersectOut);
+
+				o.push_back(origin);
+				d.push_back(intersectOut);
+
+				Vec3Df pixelcolor = BLACK;
+				int lvl = 0;
+				pixelcolor = trace(origin, dest, lvl);
+
+				char buffer[128];
+				cout << "Ray trace color = " << pixelcolor.toString(buffer, sizeof(buffer)) << endl;
+			}
+			return;
+		case 'c'://clear ray debugger
+			o.clear();
+			d.clear();
+			cout << "Ray trace history cleared\n";
+			return;
+
+		case 'w':
+			WireFrame = !WireFrame;
+			if (WireFrame){
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				cout << "WireFrame enabled\n";
+			}
+			else{
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				cout << "WireFrame disabled\n";
+			}
+			break;
+
+		default:
+			break;
+	}
+
 	cout << endl << "------SETTINGS------" << endl
-		 << "Ammbient " << (Ambient ? "ON" : "OFF") << endl
-		 << "Diffuse " << (Diffuse ? "ON" : "OFF") << endl
-		 << "Specular "	<< (Specular ? "ON" : "OFF") << endl
-		 << "Reflection " << (Reflection ? "ON" : "OFF") << endl
-		 << "Shadow " << (Shadows ? "ON" : "OFF") << endl
-		 << "Refraction " << (Refraction? "ON" : "OFF") << endl
-		 << "pixelfactorX = " << pixelfactorX << endl
-		 << "pixelfactorY = " << pixelfactorY << endl
-		 << "--------------------" << endl;
-		
+		<< "Ammbient " << (Ambient ? "ON" : "OFF") << endl
+		<< "Diffuse " << (Diffuse ? "ON" : "OFF") << endl
+		<< "Specular " << (Specular ? "ON" : "OFF") << endl
+		<< "Reflection " << (Reflection ? "ON" : "OFF") << endl
+		<< "Shadow " << (Shadows ? "ON" : "OFF") << endl
+		<< "Refraction " << (Refraction ? "ON" : "OFF") << endl
+		<< "pixelfactorX = " << pixelfactorX << endl
+		<< "pixelfactorY = " << pixelfactorY << endl
+		<< "DebugMode " << (DebugMode ? "ON" : "OFF") << endl
+		<< "WireFrame " << (WireFrame ? "ON" : "OFF") << endl
+		<< "--------------------" << endl;
+
 	// do what you want with the keyboard input t.
 	// x, y are the screen position
 
-	//here I use it to get the coordinates of a ray, which I then draw in the debug function.
-	produceRay(x, y, testRayOrigin, testRayDestination);
 
-	cout<<" pressed! The mouse was in location "<<x<<","<<y<<"!"<<std::endl;
+	cout << " pressed! The mouse was in location " << x << "," << y << "!" << std::endl;
 }
 
 
@@ -569,3 +673,45 @@ Vec3Df boxIntersectTest(Vec3Df ray[], float x, float y, float z, float w, float 
 	}
 	return Vec3Df(0, 1, 0);
 }
+/*
+box makekdtree(){
+	// making a list of all the triangles for the box method
+	std::vector<element> list;
+	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++) {
+		Triangle ctriangle = MyMesh.triangles[i];
+		element e = new element(ctriangle,i);
+		list.push_back(e);
+	}
+
+	float l [3];
+	float h [3];
+
+	for (unsigned int i = 0;i < 3; i++){
+		l[i] = std::numeric_limits<float>::max();
+		h[i] = std::numeric_limits<float>::min();
+	}
+
+	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++) {
+		Vec3Df current = MyMesh.triangles.at(i);
+		for (unsigned int j = 0; i < 3; i++) {
+			if (l[i] < current.p[i])
+				l[i] = current.p[i];
+			if (h[i] > current.p[i])
+				h[i] = current.p[i];
+		}
+	}
+
+	Vec3Df temp = new Vec3Df(l[0],l[1],l[2]);
+
+	return new Box(temp, h, list, 1);
+}
+
+bool kdtree(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut, int* ind) {
+
+	Vec3Df intersect; //intersection point of closest triangle
+	int index = -1;	  //index of closest triangle
+	float dist = FLT_MAX;
+
+	Vec3Df R[] = { origin, dest };
+	return globalbox.intersect(R, intersectOut, ind);
+}*/

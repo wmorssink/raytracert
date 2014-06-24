@@ -23,6 +23,8 @@ void init(char* fileName);
 //it is defined elsewhere
 void produceRay(int x_I, int y_I, Vec3Df & origin, Vec3Df & dest);
 
+//function to get material of the triangle with index index
+Material getMaterial(int index);
 
 //function to trace the rays (needed for recursion)
 Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl);

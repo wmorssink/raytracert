@@ -391,8 +391,8 @@ bool Mesh::loadMtl(const char * filename, std::map<string, unsigned int> & mater
         else if (strncmp(line, "Ka ", 3)==0) // ambient color
         {
             sscanf(line, "Ka %f %f %f", &f1, &f2, &f3);
-            mat.set_Ka(f1,f2,f3);
-        }
+			mat.set_Ka(f1,f2,f3);
+		}
         else if (strncmp(line, "Ks ", 3)==0) // specular color
         {
             sscanf(line, "Ks %f %f %f", &f1, &f2, &f3);
@@ -434,11 +434,13 @@ bool Mesh::loadMtl(const char * filename, std::map<string, unsigned int> & mater
         else if (strncmp(line, "Tr ", 3)==0 ) // transparency value
         {
             sscanf(line, "Tr %f", &f1);
+			printf("Tr %f\n", &f1);
             mat.set_Tr(f1);
         }
         else if (strncmp(line, "d ", 2)==0 ) // transparency value
         {
             sscanf(line, "d %f", &f1);
+			printf("d %f\n", &f1);
             mat.set_Tr(f1);
         }
 
