@@ -322,11 +322,8 @@ Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
     Vec3Df ray = origin - dest;
     Sphere sphere = Sphere();
     if(sphere.intersect(origin, dest, &intersection)) {
-//  Plane plane = Plane();
-//  if(plane.intersect(origin, dest, &intersection)) {
-        Vec3Df normal = MyCameraPosition - sphere.center;
+        Vec3Df normal = intersection - sphere.center;
         return shade(ray, intersection,  normal, &sphere.material, lvl);
-        //return Vec3Df(1,1,1);
     }
 	
     return pixelcolor;
