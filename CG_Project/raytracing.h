@@ -38,9 +38,12 @@ void yourKeyboardFunc(char key, int x, int y);
 
 void calculateNormals();
 
+bool rayIntersectTriangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut);
 bool rayIntersectRectangle(Vec3Df R[], Vec3Df T[], Vec3Df* intersectOut);
 bool rayIntersectRectangle(Vec3Df R[], Vec3Df v0, Vec3Df v1, Vec3Df v2, Vec3Df* intersectOut);
 float rayIntersectBox(Vec3Df ray[], Vec3Df loc, float w, float l, float h, Vec3Df* returnIntersect);
+
+bool kdtree(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut, int* ind);
 
 int getTeller();
 #endif

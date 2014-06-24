@@ -4,7 +4,7 @@
 #include <limits>
 #include <float.h>
 #include <typeinfo>
-#include <trianglelist.h>
+
 
 unsigned int GUESS = 3;
 float GUESS_PERCENT = 0.1f;
@@ -15,60 +15,83 @@ float a[3];
 node left;
 node right;
 
-void Box(Vec3Df _loc, float _a[], std::vector<element> triangles, char as) {
+class Box {
+	unsigned int GUESS;
+	float GUESS_PERCENT;
+	unsigned int SPLIT_AT;
+  public:
+	Box(Vec3Df _loc, float _a[], std::vector<element> trianglesinput, char asinput) {
 
-	loc = _loc;
-	a = _a;
-
-	float cost = median(triangles, as);
-	float split = (cost + a[as]) / 2;
-
-	std::vector<element> l[GUESS];
-	std::vector<element> r[GUESS];
-
-	for (int i = 0; i < GUESS; i++) {
-		std::vector<element> t[] = splitList(triangles,
-				split - (GUESS / 2 + i) * GUESS_PERCENT * a[as], as);
-		l[i] = t[0];
-		r[i] = t[1];
-	}
-
-	int eff = 0;
-	int count = std::numeric_limits<int>::max();
-
-	for (unsigned int i = 0; i < GUESS; i++) {
-		int c = r[i].size() + l[i].size();
-		if (c < count) {
-			count = c;
-			eff = i;
+		loc = _loc;
+		for(unsigned int i = 0; i < 3; i++){
+			a[i] = _a[i];
 		}
-	}
 
-	float lw = a[as] - split;
-	if (l[eff].size() > SPLIT_AT) {
-		float la[] = a;
-		la[as] = lw;
-		left = Box(loc, la, l[eff], ((as + 1) % 3));
-	} else {
-		std::vector<element> left = new trianglelist(l[eff]);
-	}
-	if (r[eff].size() > SPLIT_AT) {
-		float la[] = a;
-		la[as] = split;
-		Vec3Df n = new Vec3Df(loc);
-		n.p[as] += lw;
-		right = new Box(n, la, r[eff], ((as + 1) % 3));
-	} else {
-		right = new trianglelist(r[eff]);
-	}
-	if (right.hasEmpty()) {
-		right = right.getBranch();
-	}
-	if (left.hasEmpty()) {
-		left = left.getBranch();
-	}
+		float cost = median(trianglesinput, asinput);
+				//median(triangles, as);
+		float split = (cost + a[asinput]) / 2;
 
-}
+		std::vector<element> l[3];
+		std::vector<element> r[3];
+
+
+		for (int i = 0; i < GUESS; i++) {
+			std::vector<element> t[2] = splitList(trianglesinput,
+					split - (GUESS / 2 + i) * GUESS_PERCENT * a[asinput], asinput);
+			l[i] = t[0];
+			r[i] = t[1];
+		}
+
+		int eff = 0;
+		int count = std::numeric_limits<int>::max();
+
+		for (unsigned int i = 0; i < GUESS; i++) {
+			int c = r[i].size() + l[i].size();
+			if (c < count) {
+				count = c;
+				eff = i;
+			}
+		}
+
+		float lw = a[asinput] - split;
+		if (l[eff].size() > SPLIT_AT) {
+			float la[3];
+			for(unsigned int i = 0; i < 3; i++){
+					la[i] = a[i];
+			}
+
+			la[asinput] = lw;
+			left = Box(loc, la, l[eff], ((asinput + 1) % 3));
+		} else {
+			std::vector<element> left = trianglelist(l[eff]);
+		}
+		if (r[eff].size() > SPLIT_AT) {
+			float la[3];
+			for (unsigned int i = 0; i < 3; i++) {
+				la[i] = a[i];
+			}
+			la[asinput] = split;
+			Vec3Df n = loc;
+			n.p[asinput] += lw;
+			right = Box(n, la, r[eff], ((asinput + 1) % 3));
+		} else {
+			right = new trianglelist(r[eff]);
+		}
+		if (right.hasEmpty()) {
+			right = right.getBranch();
+		}
+		if (left.hasEmpty()) {
+			left = left.getBranch();
+		}
+
+	}
+    std::array<std::vector<element>, 2> splitList(std::vector<element> triangles, float split, char as);
+    float median(std::vector<element> triangles, char as);
+    bool intersect(Vec3Df R[], Vec3Df* intersectOut, int* ind);
+};
+
+
+
 
 std::array<std::vector<element>, 2> splitList(std::vector<element> triangles, float split, char as) {
 	std::vector<element> left;

@@ -4,23 +4,26 @@
 #include "node.h"
 #include "Vec3D.h"
 #include "mesh.h"
+#include "raytracing.h"
+#include "element.h"
 
 
-
-Triangle t[];
-int index[];
+//temp indexing of arrays
+Triangle t[24];
+int ind[24];
 
 void trianglelist(std::vector<element> _t) {
 	for(unsigned i = 0; i < _t.size(); i++) {
 		t[i] = _t.at(i).t;
-		index[i] = _t.at(i).index;
+		ind[i] = _t.at(i).elementindex;
 	}
 };
-
+	//temp implementation
 	bool hasEmpty(){
 		return false;
 	}
-	node getBranch(){
+	//temp implementation
+	node* getBranch(){
 		return NULL;
 	}
 	bool isEmpty(){
@@ -43,9 +46,10 @@ void trianglelist(std::vector<element> _t) {
 			if (rayIntersectTriangle(R, T, &tempIntersect)){
 				//ray intersects with the current triangle
 				float tempDist = Vec3Df::distance(origin, tempIntersect);
+
 				if (tempDist < dist){
 					dist = tempDist;
-					indexa = index[0];
+					indexa = ind[i];
 					intersect = tempIntersect;
 				}
 			}

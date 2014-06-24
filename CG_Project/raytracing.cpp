@@ -151,17 +151,17 @@ Also writes the intersection point of the triangle to intersectOut.
 */
 int intersectMesh(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut){
 	Vec3Df intersect; //intersection point of closest triangle
-	int index = -1;	  //index of closest triangle
+	int pointer = -1;
 	float dist = FLT_MAX;
 	int* ind;
 
 	if(kdtree(origin, dest, intersectOut, ind)){
-		intersect = intersectOut;
-		index = ind;
+		intersect = *intersectOut;
+		pointer = *ind;
 	}
 
 	memcpy(intersectOut, &intersect, sizeof(Vec3Df));
-	return index;
+	return pointer;
 }
 
 
@@ -565,7 +565,7 @@ box makekdtree(){
 	std::vector<element> list;
 	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++) {
 		Triangle ctriangle = MyMesh.triangles[i];
-		element e = new element(ctriangle,i);
+		element e = element(ctriangle,i);
 		list.push_back(e);
 	}
 
@@ -578,18 +578,23 @@ box makekdtree(){
 	}
 
 	for (unsigned int i = 0; i < MyMesh.triangles.size(); i++) {
-		Vec3Df current = MyMesh.triangles.at(i);
-		for (unsigned int j = 0; i < 3; i++) {
-			if (l[i] < current.p[i])
-				l[i] = current.p[i];
-			if (h[i] > current.p[i])
-				h[i] = current.p[i];
+		Triangle ct = MyMesh.triangles.at(i);
+		for(unsigned int k = 0; k < 3; k++){
+			Vec3Df current = MyMesh.vertices.at(ct.v[k]).p;
+			for (unsigned int j = 0; i < 3; i++) {
+				if (l[i] < current.p[i])
+					l[i] = current.p[i];
+				if (h[i] > current.p[i])
+					h[i] = current.p[i];
+			}
 		}
 	}
+	Vec3Df temp = Vec3Df(l[0],l[1],l[2]);
+	box b;
+	b.Box(temp, h, list, 1);
 
-	Vec3Df temp = new Vec3Df(l[0],l[1],l[2]);
-
-	return Box(temp, h, list, 1);
+	//Vec3Df _loc, float _a[], std::vector<element> triangles, char as
+	return b;
 }
 
 bool kdtree(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut, int* ind) {
@@ -599,5 +604,6 @@ bool kdtree(Vec3Df origin, Vec3Df dest, Vec3Df* intersectOut, int* ind) {
 	float dist = FLT_MAX;
 
 	Vec3Df R[] = { origin, dest };
-	return globalbox.intersect(R, intersectOut, ind);
+	return false;
+	//return globalbox.intersect(R, intersectOut, ind);
 }

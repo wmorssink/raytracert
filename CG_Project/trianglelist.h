@@ -2,6 +2,8 @@
 #define TRIANGLELIST_H_
 #include "node.h"
 #include "Vec3D.h"
+#include "raytracing.h"
+#include "element.h"
 
 class trianglelist : public node {
 public:
