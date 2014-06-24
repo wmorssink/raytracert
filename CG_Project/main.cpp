@@ -111,7 +111,6 @@ bool Image::writeImage(const char * filename)
 
 	fprintf(file, "P6\n%i %i\n255\n",_width, _height);
 
-	
 	std::vector<unsigned char> imageC(_image.size());
 	
 	for (unsigned int i=0; i<_image.size();++i)
@@ -128,29 +127,18 @@ bool Image::writeImage(const char * filename)
 	return true;
 }
 
-
-
-
-
-
-
-
-
-
 Mesh MyMesh; //Main mesh
 
-
-
-// Utilisé pour essayer différents types de rendu
-// Utilisé via le paramètre "-t" en ligne de commande
+// Utilisï¿½ pour essayer diffï¿½rents types de rendu
+// Utilisï¿½ via le paramï¿½tre "-t" en ligne de commande
 enum { TRIANGLE=0, MODEL=1, };
 unsigned int type = MODEL;
 
 unsigned int WindowSize_X = 500;  // largeur fenetre
 unsigned int WindowSize_Y = 500;  // hauteur fenetre
 
-unsigned int RayTracingResolutionX = 500;  // largeur fenetre
-unsigned int RayTracingResolutionY = 500;  // largeur fenetre
+unsigned int RayTracingResolutionX = 500;
+unsigned int RayTracingResolutionY = 500;
 
 
 
@@ -176,7 +164,7 @@ void dessinerRepere(float length)
 }
 
 /**
- * Appel des différentes fonctions de dessin
+ * Appel des diffï¿½rentes fonctions de dessin
 */
 void dessiner( )
 {
@@ -189,19 +177,9 @@ void dessiner( )
 	case MODEL:
 		{
 			MyMesh.draw();
-			//glBegin(GL_TRIANGLES);
-
-			//for (unsigned int i=0;i<MyMesh.triangles.size();++i)
-			//{
-			//	glColor3f(MyMesh.materials[MyMesh.triangleMaterials[i]].Kd()[0], MyMesh.materials[MyMesh.triangleMaterials[i]].Kd()[1], MyMesh.materials[MyMesh.triangleMaterials[i]].Kd()[2]);
-			//	glVertex3f(MyMesh.vertices[MyMesh.triangles[i].v[0]].p[0], MyMesh.vertices[MyMesh.triangles[i].v[0]].p[1], MyMesh.vertices[MyMesh.triangles[i].v[0]].p[2]);
-			//	glVertex3f(MyMesh.vertices[MyMesh.triangles[i].v[1]].p[0], MyMesh.vertices[MyMesh.triangles[i].v[1]].p[1], MyMesh.vertices[MyMesh.triangles[i].v[1]].p[2]);
-			//	glVertex3f(MyMesh.vertices[MyMesh.triangles[i].v[2]].p[0], MyMesh.vertices[MyMesh.triangles[i].v[2]].p[1], MyMesh.vertices[MyMesh.triangles[i].v[2]].p[2]);
-			//}
-			//glEnd();
 		}
 	default:
-		dessinerRepere(1); // Par défaut
+		dessinerRepere(1); // Par dï¿½faut
 		break;
 	}
 	
@@ -243,7 +221,7 @@ int main(int argc, char** argv)
     tbHelp();                      // affiche l'aide sur la traqueboule
 	MyCameraPosition=getCameraPosition();
     //
-    // Active la lumière
+    // Active la lumiï¿½re
     // Pour la partie
     // ECLAIRAGE
          
@@ -259,7 +237,7 @@ int main(int argc, char** argv)
 	glEnable(GL_NORMALIZE);
     glClearColor (0.0, 0.0, 0.0, 0.0);
 
-	// Details sur le mode de tracé
+	// Details sur le mode de tracï¿½
     glEnable( GL_DEPTH_TEST );            // effectuer le test de profondeur
     //glEnable(GL_CULL_FACE);
     //glCullFace(GL_BACK);
@@ -283,11 +261,11 @@ int main(int argc, char** argv)
     // lancement de la boucle principale
     glutMainLoop();
         
-    return 0;  // instruction jamais exécutée
+    return 0;  // instruction jamais exï¿½cutï¿½e
 }
 
 /**
- * Fonctions de gestion opengl à ne pas toucher
+ * Fonctions de gestion opengl ï¿½ ne pas toucher
  */
 // Actions d'affichage
 // Ne pas changer
@@ -321,28 +299,24 @@ void reshape(int w, int h)
 //transformer le x, y en position 3D
 void produceRay(int x_I, int y_I, Vec3Df * origin, Vec3Df * dest)
 {
-		int viewport[4];
-		double modelview[16];
-		double projection[16];
-		//point sur near plane 
-		//double positionN[3];
-		//point sur far plane 
-		//double positionF[3];
-		glGetDoublev(GL_MODELVIEW_MATRIX, modelview); //recuperer matrices
-		glGetDoublev(GL_PROJECTION_MATRIX, projection); //recuperer matrices
-		glGetIntegerv(GL_VIEWPORT, viewport);//viewport
-		int y_new = viewport[3] - y_I;
+	int viewport[4];
+	double modelview[16];
+	double projection[16];
+	glGetDoublev(GL_MODELVIEW_MATRIX, modelview); //recuperer matrices
+	glGetDoublev(GL_PROJECTION_MATRIX, projection); //recuperer matrices
+	glGetIntegerv(GL_VIEWPORT, viewport);//viewport
+	int y_new = viewport[3] - y_I;
 
-		double x, y, z;
-		
-		gluUnProject(x_I, y_new, 0, modelview, projection, viewport, &x, &y, &z);
-		origin->p[0]=float(x);
-		origin->p[1]=float(y);
-		origin->p[2]=float(z);
-		gluUnProject(x_I, y_new, 1, modelview, projection, viewport, &x, &y, &z);
-		dest->p[0]=float(x);
-		dest->p[1]=float(y);
-		dest->p[2]=float(z);
+	double x, y, z;
+	
+	gluUnProject(x_I, y_new, 0, modelview, projection, viewport, &x, &y, &z);
+	origin->p[0]=float(x);
+	origin->p[1]=float(y);
+	origin->p[2]=float(z);
+	gluUnProject(x_I, y_new, 1, modelview, projection, viewport, &x, &y, &z);
+	dest->p[0]=float(x);
+	dest->p[1]=float(y);
+	dest->p[2]=float(z);
 }
 
 void produceRay(int x_I, int y_I, Vec3Df & origin, Vec3Df & dest)
@@ -388,6 +362,8 @@ void keyboard(unsigned char key, int x, int y)
 		int raysPerPixel = (pixelfactorX * pixelfactorY);
 
 		int lastP = 0;
+		
+		// Our loading bar:
 		printf("__________________________________________________\n");
 		
 		for (unsigned int y = 0; y < WindowSize_Y; ++y){
@@ -397,7 +373,7 @@ void keyboard(unsigned char key, int x, int y)
 			}
 			for (unsigned int x = 0; x < WindowSize_X; ++x){
 				Vec3Df rgb = Vec3Df(0, 0, 0);
-
+				// Anti aliasing:
 				for (int subx = 0; subx < pixelfactorX; subx++){
 					for (int suby = 0; suby < pixelfactorY; suby++){
 
