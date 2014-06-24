@@ -11,6 +11,7 @@
 #include <GL/glut.h>
 #endif
 #include "raytracing.h"
+#include "plane.h"
 
 bool Ambient = true;
 bool Diffuse = true;
@@ -214,7 +215,8 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
 	//adding offset for depth bias
 	intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
 	//checking for intersect between light source and first intersection point
-	int index = intersectMesh(intersection, light_pos, &intersectOut2);
+	//int index = intersectMesh(intersection, light_pos, &intersectOut2);
+    int index = -1;
 	if (Shadows){
 		if (index == -1){
 			return false;
@@ -303,7 +305,7 @@ Material getMaterial(int index){
 Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
 
 	Vec3Df pixelcolor = BLACK;
-	
+/*
 	Vec3Df intersectOut;
 	int index = intersectMesh(origin, dest, &intersectOut);
 
@@ -315,8 +317,19 @@ Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
 	Vec3Df normal = normals[index];
 	Material material = getMaterial(index);
 	pixelcolor = shade(ray, intersectOut, normal, &material, lvl);
-
-	return pixelcolor;
+*/
+    Vec3Df intersection;
+    Vec3Df ray = origin - dest;
+    Sphere sphere = Sphere();
+    if(sphere.intersect(origin, dest, &intersection)) {
+//  Plane plane = Plane();
+//  if(plane.intersect(origin, dest, &intersection)) {
+        Vec3Df normal = MyCameraPosition - sphere.center;
+        return shade(ray, intersection,  normal, &sphere.material, lvl);
+        //return Vec3Df(1,1,1);
+    }
+	
+    return pixelcolor;
 
 }
 

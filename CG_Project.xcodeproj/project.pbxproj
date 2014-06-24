@@ -48,6 +48,7 @@
 		492E7BA3194A4BFC0001CB08 /* traqueboule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = traqueboule.h; sourceTree = "<group>"; };
 		492E7BA4194A4BFC0001CB08 /* Vec3D.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vec3D.h; sourceTree = "<group>"; };
 		492E7BA5194A4BFC0001CB08 /* Vertex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vertex.h; sourceTree = "<group>"; };
+		494B960119589E91008549E3 /* plane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = plane.h; sourceTree = "<group>"; };
 		497E4A111952E56D00767C7D /* sphere.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = sphere.bmp; sourceTree = "<group>"; };
 		497E4A121952E56D00767C7D /* sphere.mtl */ = {isa = PBXFileReference; lastKnownFileType = text; path = sphere.mtl; sourceTree = "<group>"; };
 		497E4A131952E56D00767C7D /* sphere.obj */ = {isa = PBXFileReference; lastKnownFileType = text; path = sphere.obj; sourceTree = "<group>"; };
@@ -72,7 +73,6 @@
 				492E7B93194A4BC20001CB08 /* GLUT.framework */,
 				492E7B94194A4BC20001CB08 /* OpenGL.framework */,
 				492E7B89194A4B7B0001CB08 /* CG_Project */,
-				492E7B88194A4B7B0001CB08 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -82,6 +82,7 @@
 				492E7B87194A4B7B0001CB08 /* CG_Project */,
 			);
 			name = Products;
+			path = ..;
 			sourceTree = "<group>";
 		};
 		492E7B89194A4B7B0001CB08 /* CG_Project */ = {
@@ -106,6 +107,8 @@
 				492E7BA4194A4BFC0001CB08 /* Vec3D.h */,
 				492E7BA5194A4BFC0001CB08 /* Vertex.h */,
 				492E7B8C194A4B7B0001CB08 /* CG_Project.1 */,
+				494B960119589E91008549E3 /* plane.h */,
+				492E7B88194A4B7B0001CB08 /* Products */,
 			);
 			path = CG_Project;
 			sourceTree = "<group>";
