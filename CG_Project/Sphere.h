@@ -49,6 +49,12 @@ public:
         center = _origin; radius = _radius; material = _material;
     }
     
+    inline Vec3Df getNormalAt(const Vec3Df &intersection) {
+        Vec3Df normal = center - intersection;
+        normal.normalize();
+        return normal;
+    }
+    
     inline bool intersect(const Ray &ray, Vec3Df* intersection) {
         Vec3Df direction = ray.origin - ray.destination;
         Vec3Df op = ray.origin - center; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
