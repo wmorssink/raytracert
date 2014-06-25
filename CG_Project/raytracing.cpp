@@ -77,10 +77,10 @@ void init(char* fileName)
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
     
-    spheres.push_back(Sphere(Vec3Df(0, -105,0), 100.0f, Material::SoftPink));
-    spheres.push_back(Sphere(Vec3Df(0, 0, -105), 100.0f, Material::SoftPink));
-    //spheres.push_back(Sphere(Vec3Df(0,0,0), 1.0f, Material::BlueSemiTransparent));
+    spheres.push_back(Sphere(Vec3Df(0, -1006,0), 1000.0f, Material::SoftPink));
+    //spheres.push_back(Sphere(Vec3Df(1,1,1), .25f, Material::BlueSemiTransparent));
     spheres.push_back(Sphere(Vec3Df(0,0,0), .5f, Material::DiffuseWhite));
+    spheres.push_back(Sphere(Vec3Df(0,1,0), .5f, Material::DiffuseWhite));
 }
 
 /*
