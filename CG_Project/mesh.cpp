@@ -107,15 +107,27 @@ void Mesh::draw(){
         glPopMatrix();
     }
     
-    
-    
-    
+    glBegin(GL_QUADS);
+    for(unsigned long i = 0, s = planes.size(); i < s; i++) {
+        Plane plane = planes[i];
+        
+        glPushMatrix();
+        
+        glColor3fv(plane.material.Kd().pointer());
+        glNormal3fv(plane.normal.pointer());
+        
+        glVertex3f(-10, plane.point[1], -10);
+        glVertex3f(-10, plane.point[1],  10);
+        glVertex3f( 10, plane.point[1],  10);
+        glVertex3f( 10, plane.point[1], -10);
+        
+        glPopMatrix();
+        
+    }
+    glEnd();
     
 }
 
-    
-    
-    
 bool Mesh::loadMesh(const char * filename, bool randomizeTriangulation)
 {
     vertices.clear();
