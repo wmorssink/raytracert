@@ -12,6 +12,7 @@
 #endif
 #include "raytracing.h"
 #include "sphere.h"
+#include "plane.h"
 
 bool Ambient = true;
 bool Diffuse = true;
@@ -32,7 +33,6 @@ int max_lvl = 15;//max recursive depth
 using namespace std;
 
 vector<Vec3Df> normals;
-vector<Sphere> spheres;
 
 //temporary variables
 Vec3Df testRayOrigin;
@@ -77,10 +77,13 @@ void init(char* fileName)
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
     
-    spheres.push_back(Sphere(Vec3Df(0, -1006,0), 1000.0f, Material::SoftPink));
+    //spheres.push_back(Sphere(Vec3Df(0, -1006,0), 1000.0f, Material::SoftPink));
     //spheres.push_back(Sphere(Vec3Df(1,1,1), .25f, Material::BlueSemiTransparent));
-    spheres.push_back(Sphere(Vec3Df(0,0,0), .5f, Material::DiffuseWhite));
-    spheres.push_back(Sphere(Vec3Df(0,1,0), .5f, Material::DiffuseWhite));
+    //spheres.push_back(Sphere(Vec3Df(0,0,0), .5f, Material::DiffuseWhite));
+    MyMesh.addSphere(Sphere(Vec3Df(-1.5,1,0), .5f, Material::SoftPink));
+    MyMesh.addSphere(Sphere(Vec3Df(0,1,0), .5f, Material::SoftPink));
+    MyMesh.addSphere(Sphere(Vec3Df(1.5,1,0), .5f, Material::SoftPink));
+    MyMesh.addPlane(Plane(Vec3Df(0,0,0), Vec3Df(0,1,0), Material::Mirror));
 }
 
 /*
@@ -187,8 +190,8 @@ bool intersect(const Ray &ray, Vec3Df* intersectOut, Vec3Df* normalOut, Material
 		}
     }
     
-    for(unsigned long i = 0, s = spheres.size(); i < s; i++) {
-        Sphere sphere = spheres[i];
+    for(unsigned long i = 0, s = MyMesh.spheres.size(); i < s; i++) {
+        Sphere sphere = MyMesh.spheres[i];
         if(sphere.intersect(ray, &tempIntersect)) {
 			//ray intersects with the current triangle
 			float tempDist = Vec3Df::distance(ray.origin, tempIntersect);
@@ -196,6 +199,20 @@ bool intersect(const Ray &ray, Vec3Df* intersectOut, Vec3Df* normalOut, Material
 				dist = tempDist;
                 normal = sphere.getNormalAt(tempIntersect);
                 material = sphere.material;
+				intersect = tempIntersect;
+			}
+        }
+    }
+    
+    for(unsigned long i = 0, s = MyMesh.planes.size(); i < s; i++) {
+        Plane plane = MyMesh.planes[i];
+        if(plane.intersect(ray, &tempIntersect)) {
+            // ray intersects with the plane
+            float tempDist = Vec3Df::distance(ray.origin, tempIntersect);
+            if (tempDist < dist){
+				dist = tempDist;
+                normal = plane.normal;
+                material = plane.material;
 				intersect = tempIntersect;
 			}
         }
@@ -243,7 +260,6 @@ Vec3Df blinnPhongSpecularOnly(const Vec3Df & vertexPos, Vec3Df & normal, Materia
 	//printf("ks = %i\n", material->Ks());
 	Specularity += material->Ks() * SpecularTerm;
 	
-
 	return Specularity;
 }
 

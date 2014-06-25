@@ -10,7 +10,7 @@
 #define CG_Project_sphere_h
 
 #include "Vec3D.h"
-#include "mesh.h"
+#include "material.h"
 #include "ray.h"
 
 class Sphere {

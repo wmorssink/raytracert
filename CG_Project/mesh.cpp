@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
+#include "material.h"
 
 
    
@@ -24,6 +25,9 @@ const unsigned int LINE_LEN=256;
 Material Material::DiffuseWhite = MaterialBuilder().set_Kd(Vec3Df(1,1,1)).set_Ks(Vec3Df(.1,.1,.1)).set_Ns(1000).build();
 Material Material::SoftPink = MaterialBuilder().set_Kd(Vec3Df(1,.9,.9)).set_Ks(Vec3Df(.1,.1,.1)).set_Ns(2000).build();
 Material Material::BlueSemiTransparent = MaterialBuilder().set_Kd(Vec3Df(0,0,1)).set_Ks(Vec3Df(.1,.1,.1)).set_Tr(0.25).set_Ni(1.7).set_Ns(200).build();
+
+// Full mirror. Transparent + full KS
+Material Material::Mirror = MaterialBuilder().set_Kd(Vec3Df(0,0,0)).set_Ks(Vec3Df(1,1,1)).set_Tr(0).build();
 
 
 /************************************************************
@@ -90,7 +94,23 @@ void Mesh::draw(){
         }
 
     }
+    
     glEnd();
+    
+    for (unsigned long i = 0, s = spheres.size(); i < s; i++) {
+        Sphere sphere = spheres[i];
+        
+        glPushMatrix();
+        glColor3fv(sphere.material.Kd().pointer());
+        glTranslated(sphere.center[0], sphere.center[1], sphere.center[2]);
+        glutSolidSphere(sphere.radius, 50, 50);
+        glPopMatrix();
+    }
+    
+    
+    
+    
+    
 }
 
     

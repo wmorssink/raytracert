@@ -56,6 +56,7 @@
 		497E4A111952E56D00767C7D /* sphere.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = sphere.bmp; sourceTree = "<group>"; };
 		497E4A121952E56D00767C7D /* sphere.mtl */ = {isa = PBXFileReference; lastKnownFileType = text; path = sphere.mtl; sourceTree = "<group>"; };
 		497E4A131952E56D00767C7D /* sphere.obj */ = {isa = PBXFileReference; lastKnownFileType = text; path = sphere.obj; sourceTree = "<group>"; };
+		49DDBCC1195B4E0000F3CD68 /* material.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = material.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -117,6 +118,7 @@
 				494B960319599B38008549E3 /* rectangle.h */,
 				494B960419599B98008549E3 /* box.h */,
 				494B960519599BC6008549E3 /* sphere.h */,
+				49DDBCC1195B4E0000F3CD68 /* material.h */,
 			);
 			path = CG_Project;
 			sourceTree = "<group>";
