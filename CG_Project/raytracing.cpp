@@ -21,18 +21,18 @@ bool Specular = true;
 bool Refraction = true;
 bool WireFrame = false;
 
-#define pixelfactor 2	//use 3 for good looking, 1 for fast performance
+#define pixelfactor 3	//use 3 for good looking, 1 for fast performance
 unsigned int pixelfactorX = pixelfactor;
 unsigned int pixelfactorY = pixelfactor;
 
 #define BLACK Vec3Df(0, 0, 0);
 
-int max_lvl = 5;//max recursive depth
+int max_lvl = 15;//max recursive depth
 
 using namespace std;
 
 vector<Vec3Df> normals;
-Sphere spheres[] = { /* new Sphere() */ };
+vector<Sphere> spheres;
 
 //temporary variables
 Vec3Df testRayOrigin;
@@ -40,6 +40,8 @@ Vec3Df testRayDestination;
 //for ray debugging
 vector<Vec3Df> o, d;
 bool DebugMode = false;
+bool IntersectMode = false;
+bool ShowNormalMode = false;
 //////////
 
 //use this function for any preprocessing of the mesh.
@@ -57,14 +59,14 @@ void init(char* fileName)
 			* global variable / function, but I couldn't manage to get this done.
 			* This way, at least the Windows users have no problems...
 			*/
-			fileName = "/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/scene_3.obj";
+			fileName = "/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/cube.obj";
 		#else
 			//set default model
 			fileName = "cube.obj";//"dodgeColorTest.obj"
 		#endif
 	}
-
-	MyMesh.loadMesh(fileName, true);
+    // Skip loading mesh for now, just spheres
+	//MyMesh.loadMesh(fileName, true);
 	MyMesh.computeVertexNormals();
 
 	//calculate normals for triangles at startup
@@ -74,6 +76,11 @@ void init(char* fileName)
 	//at least ONE light source has to be in the scene!!!
 	//here, we set it to the current location of the camera
 	MyLightPositions.push_back(MyCameraPosition);
+    
+    spheres.push_back(Sphere(Vec3Df(0, -105,0), 100.0f, Material::SoftPink));
+    spheres.push_back(Sphere(Vec3Df(0, 0, -105), 100.0f, Material::SoftPink));
+    //spheres.push_back(Sphere(Vec3Df(0,0,0), 1.0f, Material::BlueSemiTransparent));
+    spheres.push_back(Sphere(Vec3Df(0,0,0), .5f, Material::DiffuseWhite));
 }
 
 /*
@@ -180,7 +187,7 @@ bool intersect(const Ray &ray, Vec3Df* intersectOut, Vec3Df* normalOut, Material
 		}
     }
     
-    for(unsigned int i = 0, s = sizeof(spheres) / sizeof(Sphere); i < s; i++) {
+    for(unsigned long i = 0, s = spheres.size(); i < s; i++) {
         Sphere sphere = spheres[i];
         if(sphere.intersect(ray, &tempIntersect)) {
 			//ray intersects with the current triangle
@@ -252,16 +259,9 @@ bool isShadow(Vec3Df intersection, Vec3Df light_pos){
     Material materialOut;
 	//adding offset for depth bias
 	intersection = intersection + Vec3Df(0.1, 0.1, 0.1);
-    if(Shadows) {
-        //checking for intersect between light source and first intersection point
-        if(intersect(Ray(intersection, light_pos), &intersectOut, &normalOut, &materialOut)) {
-            if (materialOut.has_Tr() && materialOut.Tr() < 1.0){
-				return false;
-			}
-            return true;
-        }
-	}
-	return false;
+    return Shadows // Shadows should be enabled, otherwise false
+            && intersect(Ray(intersection, light_pos), &intersectOut, &normalOut, &materialOut) // Find object between light and intersection
+            && (!( materialOut.has_Tr() && materialOut.Tr() < 1.0f )); // If intersection, but material of intersect is transparent, then false
 }
 
 /*
@@ -351,19 +351,19 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
             float tr = material->has_Tr() ? material->Tr() : 1;
 			if (Diffuse && material->has_Kd()){
 				//add diffuse color
-				pixelcolor += material->Tr() * diffuseOnly(vertexPos, normal, material, L);
+				pixelcolor += tr * diffuseOnly(vertexPos, normal, material, L);
 			}
 			if (Specular && material->has_Ks() && material->has_Ns()){
 				//add Specular part
-				pixelcolor += material->Tr() * blinnPhongSpecularOnly(vertexPos, normal, material, L);
+				pixelcolor += tr * blinnPhongSpecularOnly(vertexPos, normal, material, L);
 			}
 		}
 	}
-	if (Refraction && (material->Tr()<1) && lvl < max_lvl){
+	if (Refraction  && lvl < max_lvl && material->has_Tr() && material->Tr()<1 ){
 		//calculate refraction
 		pixelcolor += refraction(ray, vertexPos, normal, material, lvl +1);
 	}
-	else if (Reflection && lvl < max_lvl){
+	else if (Reflection && material->has_Ks() && lvl < max_lvl) {
 		//calculate reflection we take Ks() as same aproximate reflection coefficient. So a mirror wpuld have Ks(1,1,1)
 		pixelcolor += material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 	}
@@ -395,6 +395,12 @@ Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
         if (DebugMode){
             o.push_back(origin);
             d.push_back(intersectOut);
+        }
+        
+        if(ShowNormalMode) {
+            return normalOut;
+        } else if (IntersectMode) {
+            return Vec3Df(1,1,1);
         }
         
         pixelcolor = shade(ray, intersectOut, normalOut, &materialOut, lvl);
@@ -507,6 +513,14 @@ void yourKeyboardFunc(char key, int x, int y){
 				cout << "Ray trace color = " << pixelcolor.toString(buffer, sizeof(buffer)) << endl;
 			}
 			return;
+        case 'n': // Normal mode: Don't shade, but show normals
+            if(!ShowNormalMode) IntersectMode = false;
+            ShowNormalMode = !ShowNormalMode;
+            break;
+        case 'i': // Intersect mode: Don't shade, but show intersections
+            if(!IntersectMode) ShowNormalMode = false;
+            IntersectMode = !IntersectMode;
+            break;
 		case 'c'://clear ray debugger
 			o.clear();
 			d.clear();
@@ -541,6 +555,8 @@ void yourKeyboardFunc(char key, int x, int y){
 		<< "pixelfactorY = " << pixelfactorY << endl
 		<< "DebugMode " << (DebugMode ? "ON" : "OFF") << endl
 		<< "WireFrame " << (WireFrame ? "ON" : "OFF") << endl
+        << "IntersectMode " << (IntersectMode ? "ON" : "OFF") << endl
+        << "ShowNormals " << (ShowNormalMode ? "ON" : "OFF") << endl
 		<< "--------------------" << endl;
 
 	// do what you want with the keyboard input t.
