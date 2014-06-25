@@ -59,14 +59,14 @@ void init(char* fileName)
 			* global variable / function, but I couldn't manage to get this done.
 			* This way, at least the Windows users have no problems...
 			*/
-			fileName = "/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/cube.obj";
+			fileName = "/Users/jgmeligmeyling/git/ti1805raytracer/CG_Project/ cube.obj";
 		#else
 			//set default model
 			fileName = "cube.obj";//"dodgeColorTest.obj"
 		#endif
 	}
     // Skip loading mesh for now, just spheres
-	//MyMesh.loadMesh(fileName, true);
+	MyMesh.loadMesh(fileName, true);
 	MyMesh.computeVertexNormals();
 
 	//calculate normals for triangles at startup
