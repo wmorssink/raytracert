@@ -29,7 +29,7 @@ class Material
             Ks_is_set_=m.Ks_is_set_; // specular
             
             Ns_=m.Ns_;         
-            Ns_is_set_=m.Ns_is_set_; // specular
+            Ns_is_set_=m.Ns_is_set_; // specular shinyness
             Ni_=m.Ni_;         
             Ni_is_set_=m.Ni_is_set_; // specular
 
@@ -111,6 +111,11 @@ class Material
             return name_;
         }
         
+        
+        static Material DiffuseWhite;
+        static Material SoftPink;
+        static Material BlueSemiTransparent;
+        
     private:
 
         Vec3Df Kd_;         bool Kd_is_set_; // diffuse
@@ -122,7 +127,66 @@ class Material
         float Tr_;         bool Tr_is_set_; // transperency
         std::string        name_;
         std::string        textureName_;
+};
+
+class MaterialBuilder {
+public:
+    MaterialBuilder& set_Kd(const Vec3Df &Kd) {
+        Kd_ = Kd; Kd_is_set_ = true;
+        return *this;
     };
+    
+    MaterialBuilder& set_Ka(const Vec3Df &Ka) {
+        Ka_ = Ka; Ka_is_set_=true;
+        return *this;
+    }
+    
+    MaterialBuilder& set_Ks(const Vec3Df &Ks) {
+        Ks_ = Ks; Ks_is_set_=true;
+        return *this;
+    }
+    
+    MaterialBuilder& set_Ns( float r) {
+        Ns_ = r;    Ns_is_set_=true;
+        return *this;
+    }
+    
+    MaterialBuilder& set_Ni( float r) {
+        Ni_=r;    Ni_is_set_=true;
+        return *this;
+    }
+    
+    MaterialBuilder& set_illum( int r) {
+        illum_=r;    illum_is_set_=true;
+        return *this;
+    }
+    
+    MaterialBuilder& set_Tr( float t ) {
+        Tr_=t;            Tr_is_set_=true;
+        return *this;
+    }
+    
+    Material build() {
+        Material material = Material();
+        if(Kd_is_set_) material.set_Kd(Kd_[0], Kd_[1], Kd_[2]);
+        if(Ka_is_set_) material.set_Ka(Ka_[0], Ka_[1], Ka_[2]);
+        if(Ks_is_set_) material.set_Ks(Ks_[0], Ks_[1], Ks_[2]);
+        if(Ns_is_set_) material.set_Ns(Ns_);
+        if(Ni_is_set_) material.set_Ni(Ni_);
+        if(illum_is_set_) material.set_illum(illum_);
+        if(Tr_is_set_) material.set_Tr(Tr_);
+        return material;
+    }
+    
+private:
+    Vec3Df Kd_;        bool Kd_is_set_; // diffuse
+    Vec3Df Ka_;        bool Ka_is_set_; // ambient
+    Vec3Df Ks_;        bool Ks_is_set_; // specular
+    float Ns_;         bool Ns_is_set_; // shinyness
+    float Ni_;         bool Ni_is_set_; // refraction index
+    int illum_;        bool illum_is_set_;//illumination model
+    float Tr_;         bool Tr_is_set_; // transperency
+};
 
 
 /************************************************************

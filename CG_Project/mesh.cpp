@@ -21,6 +21,10 @@ using namespace std;
 
 const unsigned int LINE_LEN=256;
 
+Material Material::DiffuseWhite = MaterialBuilder().set_Kd(Vec3Df(1,1,1)).set_Ks(Vec3Df(1,1,1)).set_Ns(50).build();
+Material Material::SoftPink = MaterialBuilder().set_Kd(Vec3Df(1,.8,.8)).set_Ks(Vec3Df(1,1,1)).set_Ns(100).build();
+Material Material::BlueSemiTransparent  =MaterialBuilder().set_Kd(Vec3Df(0,0,1)).set_Tr(0).set_Ni(2.49).build();
+
 
 /************************************************************
  * Normal calculations
