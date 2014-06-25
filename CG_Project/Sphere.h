@@ -14,8 +14,7 @@
 #include "ray.h"
 
 class Sphere {
-    
-public:
+    public:
     
     Vec3Df center;
     float radius;
@@ -50,32 +49,26 @@ public:
     }
     
     inline Vec3Df getNormalAt(const Vec3Df &intersection) {
-        Vec3Df normal = center - intersection;
+        Vec3Df normal =  intersection - center;
         normal.normalize();
         return normal;
     }
     
-    inline bool intersect(const Ray &ray, Vec3Df* intersection) {
-        Vec3Df direction = ray.origin - ray.destination;
-        Vec3Df op = ray.origin - center; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
-        
-        float eps=1e-4;
-        float b = 2 * Vec3Df::dotProduct(op, direction);
-        float a = Vec3Df::dotProduct(direction, direction);
-        float c = Vec3Df::dotProduct(op, op) - (radius * radius);
-        float disc = b*b - 4*a*c;
-        
-        if ( disc <  0 ) {
-            return false;
-        } else {
-            disc = sqrt(disc);
-            float t = (t=-b-disc)>eps ? t : ((t=-b+disc)>eps ? t : 0);
-            Vec3Df I = ray.destination + t * direction;
-            memcpy(intersection, &I, sizeof(Vec3Df));
-            return true;
-        }
+    inline bool intersect(const Ray &ray, Vec3Df* intersectOut) {
+        Vec3Df direction = ray.destination - ray.origin; // ray direction vector
+        direction.normalize(); // We need the unit vector for the direction
+        Vec3Df op = center - ray.origin; // Solve t^2*d.d + 2*t*(o-p).d + (o-p).(o-p)-R^2 = 0
+        double t, eps=1e-4, b=Vec3Df::dotProduct(op, direction), det= b * b- Vec3Df::dotProduct(op, op) + radius*  radius;
+        if (det<0) return false; // There are no intersections, return false
+        det=sqrt(det); // Take the square root of the determinant
+        t = (t=b-det) > eps ? t : ((t = b + det) > eps ? t : 0);
+        if (t <= 0) return false; // Point is  behind camera
+        Vec3Df intersection = ray.origin + direction * t;
+        memcpy(intersectOut, &intersection, sizeof(Vec3Df));
+        return true;
     }
     
+
 };
 
 #endif
