@@ -2,6 +2,7 @@
 #define RAYTRACING_Hjdslkjfadjfasljf
 #include <vector>
 #include "mesh.h"
+#include "ray.h"
 //Welcome to your assignment...
 //this is an important file, raytracing.cpp is what you need to fill out
 
@@ -27,7 +28,7 @@ void produceRay(int x_I, int y_I, Vec3Df & origin, Vec3Df & dest);
 Material getMaterial(int index);
 
 //function to trace the rays (needed for recursion)
-Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl);
+Vec3Df trace(const Ray & ray, int lvl);
 
 //your main function to rewrite
 Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest);

@@ -24,10 +24,10 @@ const unsigned int LINE_LEN=256;
 
 Material Material::DiffuseWhite = MaterialBuilder().set_Kd(Vec3Df(1,1,1)).set_Ks(Vec3Df(.1,.1,.1)).set_Ns(1000).build();
 Material Material::SoftPink = MaterialBuilder().set_Kd(Vec3Df(1,.9,.9)).set_Ks(Vec3Df(.1,.1,.1)).set_Ns(2000).build();
-Material Material::BlueSemiTransparent = MaterialBuilder().set_Kd(Vec3Df(0,0,1)).set_Ks(Vec3Df(.1,.1,.1)).set_Tr(0.25).set_Ni(1.7).set_Ns(200).build();
+Material Material::BlueSemiTransparent = MaterialBuilder().set_Kd(Vec3Df(.33,.33,1)).set_Ks(Vec3Df(.1,.1,.1)).set_Tr(.25).set_Ni(1.7).set_Ns(200).build();
 
 // Full mirror. Transparent + full KS
-Material Material::Mirror = MaterialBuilder().set_Kd(Vec3Df(0,0,0)).set_Ks(Vec3Df(1,1,1)).set_Tr(0).build();
+Material Material::Mirror = MaterialBuilder().set_Kd(Vec3Df(.25,.25,.25)).set_Ks(Vec3Df(1,1,1)).build();
 
 
 /************************************************************

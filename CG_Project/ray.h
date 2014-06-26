@@ -11,10 +11,14 @@
 #include "Vec3D.h"
 
 struct Ray {
-    Vec3Df origin, destination;
+    Vec3Df origin, destination, direction;
     
     Ray(Vec3Df _origin, Vec3Df _destination)
-        : origin(_origin), destination(_destination) {}
+        : origin(_origin), destination(_destination) {
+            direction = destination - origin;
+            direction.normalize();
+    }
+    
 };
 
 #endif

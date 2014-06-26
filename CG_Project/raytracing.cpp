@@ -80,10 +80,11 @@ void init(char* fileName)
     //spheres.push_back(Sphere(Vec3Df(0, -1006,0), 1000.0f, Material::SoftPink));
     //spheres.push_back(Sphere(Vec3Df(1,1,1), .25f, Material::BlueSemiTransparent));
     //spheres.push_back(Sphere(Vec3Df(0,0,0), .5f, Material::DiffuseWhite));
-    MyMesh.addSphere(Sphere(Vec3Df(-1.5,1,0), .5f, Material::SoftPink));
-    MyMesh.addSphere(Sphere(Vec3Df(0,1,0), .5f, Material::SoftPink));
-    MyMesh.addSphere(Sphere(Vec3Df(1.5,1,0), .5f, Material::SoftPink));
+    MyMesh.addSphere(Sphere(Vec3Df(-1.5,.5,0), .5f, Material::SoftPink));
+    MyMesh.addSphere(Sphere(Vec3Df(0,.5,.5), .5f, Material::BlueSemiTransparent));
+    MyMesh.addSphere(Sphere(Vec3Df(1.5,.5,0), .5f, Material::SoftPink));
     MyMesh.addPlane(Plane(Vec3Df(0,0,0), Vec3Df(0,1,0), Material::Mirror));
+    MyMesh.addPlane(Plane(Vec3Df(0,0,-5), Vec3Df(0,0,1), Material::Mirror));
 }
 
 /*
@@ -294,23 +295,21 @@ void addOffset(Vec3Df* point, Vec3Df* towardsPoint){
 	Function to calculate the reflection Vector and then trace it further recursively
 */
 
-Vec3Df reflection(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
-	ray.normalize();
+Vec3Df reflection(const Ray &ray, const Vec3Df & vertexPos, Vec3Df & normal, int lvl){
 	//calculate reflection vector
-	Vec3Df R = ray -(2 * Vec3Df::dotProduct(normal, ray)*normal);
+	Vec3Df R = ray.direction -(2 * Vec3Df::dotProduct(normal, ray.direction) * normal);
 	Vec3Df point = vertexPos;
 	Vec3Df dest = vertexPos + R;
 	addOffset(&point, &dest);
-	return trace(point, dest, lvl);
+	return trace(Ray(point, dest), lvl);
 }
 
 /*
 	Calculate refraction vector and trace it further
 */
-Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
+Vec3Df refraction(const Ray &ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
 	float ni = material->Ni();
-	ray.normalize();
-	float check = Vec3Df::dotProduct(ray, (normal));
+	float check = Vec3Df::dotProduct(ray.direction, normal);
 	//check if ray is going inside the material or coming out of it
 	if (check < 0){
 		float angle = acosf(check);
@@ -319,30 +318,30 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 			return material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 		}
 		float nr = 1 / ni;
-		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(normal, ray), 2));
+		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct(normal, ray.direction), 2));
 		//check if there is not a total internal reflection
 		if (root >= 0.0){
 			root = sqrt(root);
 			//calculate transition Vector
-			Vec3Df T = nr*(ray-Vec3Df::dotProduct(normal, ray)*normal)- normal * root;
+			Vec3Df T = nr * (ray.direction - Vec3Df::dotProduct(normal, ray.direction) * normal)- normal * root;
 			Vec3Df point = vertexPos;
 			Vec3Df dest = vertexPos + T;
 			addOffset(&point, &dest);
-			return (1-material->Tr()) * trace(point, dest, lvl+1);
+			return (1-material->Tr()) * trace(Ray(point, dest), lvl+1);
 		}
 	}
 	else{
 		float nr = ni;
-		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct((-normal), ray), 2));
+		float root = 1 - powf(nr, 2)*(1 - powf(Vec3Df::dotProduct((-normal), ray.direction), 2));
 		//check if there is not a total internal reflection
 		if (root >= 0.0){
 			root = sqrt(root);
 			//calculate transition Vector
-			Vec3Df T = nr*(ray - Vec3Df::dotProduct((-normal), ray)*(-normal)) - (-normal) * root;
+			Vec3Df T = nr * (ray.direction - Vec3Df::dotProduct((-normal), ray.direction)*(-normal)) - (-normal) * root;
 			Vec3Df point = vertexPos;
 			Vec3Df dest = point + T;
 			addOffset(&point, &dest);
-			return (1 - material->Tr()) * trace(point, dest, lvl + 1);
+			return (1 - material->Tr()) * trace(Ray(point, dest), lvl + 1);
 			
 		}
 	}
@@ -352,7 +351,7 @@ Vec3Df refraction(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Materia
 /*
 	Shading function that returns the resulting color
 */
-Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
+Vec3Df shade(const Ray &ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* material, int lvl){
 	Vec3Df pixelcolor = BLACK;
 	if (Ambient && material->has_Ka()){
 		//add ambient color
@@ -379,8 +378,9 @@ Vec3Df shade(Vec3Df ray, const Vec3Df & vertexPos, Vec3Df & normal, Material* ma
 		//calculate refraction
 		pixelcolor += refraction(ray, vertexPos, normal, material, lvl +1);
 	}
-	else if (Reflection && material->has_Ks() && lvl < max_lvl) {
-		//calculate reflection we take Ks() as same aproximate reflection coefficient. So a mirror wpuld have Ks(1,1,1)
+	
+    if (Reflection && material->has_Ks() && lvl < max_lvl) {
+		//calculate reflection we take Ks() as same aproximate reflection coefficient. So a mirror would have Ks(1,1,1)
 		pixelcolor += material->Ks() * reflection(ray, vertexPos, normal, lvl + 1);
 	}
 
@@ -399,17 +399,16 @@ Material getMaterial(int index){
 /*
 	Trace function that is called recursively
 */
-Vec3Df trace(const Vec3Df & origin, const Vec3Df & dest, int lvl){
-	Vec3Df pixelcolor = BLACK;	Vec3Df intersectOut, normalOut;
+Vec3Df trace(const Ray &ray, int lvl){
+	Vec3Df pixelcolor = BLACK;
+    Vec3Df intersectOut, normalOut;
     Material materialOut;
     
     
 	//check for intersection
-    if(intersect(Ray(origin, dest), &intersectOut, &normalOut, &materialOut)) {
-        Vec3Df ray = origin - dest;
-        
+    if(intersect(ray, &intersectOut, &normalOut, &materialOut)) {
         if (DebugMode){
-            o.push_back(origin);
+            o.push_back(ray.origin);
             d.push_back(intersectOut);
         }
         
@@ -431,7 +430,8 @@ Vec3Df performRayTracing(const Vec3Df & origin, const Vec3Df & dest)
 {
 	Vec3Df pixelcolor = BLACK;
 	int lvl = 0;
-	pixelcolor = trace(origin, dest, lvl);
+    Ray ray = Ray(origin, dest);
+	pixelcolor = trace(ray, lvl);
 	return pixelcolor;
 }
 
@@ -514,8 +514,7 @@ void yourKeyboardFunc(char key, int x, int y){
 				Vec3Df origin, dest, intersectOut, normalOut;
                 Material materialOut;
 				produceRay(x, y, origin, dest);
-
-				int i = intersect(Ray(origin, dest), &intersectOut, &normalOut, &materialOut);
+                intersect(Ray(origin, dest), &intersectOut, &normalOut, &materialOut);
 
 				//add origin and intersection to vectors
 				o.push_back(origin);
@@ -523,7 +522,7 @@ void yourKeyboardFunc(char key, int x, int y){
 
 				Vec3Df pixelcolor = BLACK;
 				int lvl = 0;
-				pixelcolor = trace(origin, dest, lvl);
+				pixelcolor = trace(Ray(origin, dest), lvl);
 
 				char buffer[128];
 				cout << "Ray trace color = " << pixelcolor.toString(buffer, sizeof(buffer)) << endl;
